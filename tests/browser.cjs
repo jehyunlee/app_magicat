@@ -18,7 +18,7 @@ const path = require('node:path');
   const seenChoices = new Set();
   page.on('pageerror', error => errors.push(error.message));
   page.on('requestfailed', request => errors.push(request.url() + ': ' + request.failure().errorText));
-  const url = pathToFileURL(path.resolve(__dirname, '../index.html')).href;
+  const url = process.env.MAGICAT_URL || pathToFileURL(path.resolve(__dirname, '../index.html')).href;
   async function replaySignature() {
     return page.evaluate(() => {
       const state = MG.Game.getState();
