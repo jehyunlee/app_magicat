@@ -171,22 +171,22 @@
     var thirdHated = hated[2].hint;
     if (templateIndex === 1) {
       return [
-        facts[0] + ' ' + facts[1] + ' This cat likes the ' + loved.hint + '.',
-        facts[2] + ' ' + facts[3] + ' It skips the ' + firstHated +
-          '. It leaves the ' + secondHated + '. It skips the ' + thirdHated + '.'
+        facts[0] + ' ' + facts[1] + ' Your cat likes the ' + loved.hint + '.',
+        facts[2] + ' ' + facts[3] + ' Your cat does not like the ' + firstHated +
+          '. It does not like the ' + secondHated + '. It does not like the ' + thirdHated + '.'
       ];
     }
     if (templateIndex === 2) {
       return [
-        facts[0] + ' It wants the ' + loved.hint + '. ' + facts[1],
-        facts[2] + ' It leaves the ' + firstHated + '. ' + facts[3] +
-          ' It skips the ' + secondHated + '. It walks past the ' + thirdHated + '.'
+        facts[0] + ' Your cat likes the ' + loved.hint + '. ' + facts[1],
+        facts[2] + ' Your cat does not like the ' + firstHated + '. ' + facts[3] +
+          ' It does not like the ' + secondHated + '. It does not like the ' + thirdHated + '.'
       ];
     }
     return [
-      facts[0] + ' It picks the ' + loved.hint + '. ' + facts[1],
-      facts[2] + ' ' + facts[3] + ' It walks past the ' + firstHated +
-        '. It skips the ' + secondHated + '. It leaves the ' + thirdHated + '.'
+      facts[0] + ' Your cat likes the ' + loved.hint + '. ' + facts[1],
+      facts[2] + ' ' + facts[3] + ' Your cat does not like the ' + firstHated +
+        '. It does not like the ' + secondHated + '. It does not like the ' + thirdHated + '.'
     ];
   }
 

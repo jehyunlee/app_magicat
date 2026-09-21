@@ -37,6 +37,13 @@ test('assembled story paragraphs also keep their sentences short', () => {
       const state = { ...Logic.initial(cat), seed: Math.imul(seed, 0x9e3779b9) >>> 0 };
       for (let stage = 1; stage <= 10; stage++) {
         const round = Logic.round({ ...state, stage });
+        const text = round.bodyEn.join(' ');
+        const liked = round.options.find(option => option.id === round.correctId);
+        assert.ok(text.includes('Your cat likes the ' + liked.hint + '.'));
+        for (const option of round.options.filter(option => option.id !== round.correctId)) {
+          assert.ok(text.includes('does not like the ' + option.hint + '.'));
+        }
+        assert.doesNotMatch(text, /\b(skips|walks past|loses interest|turns elsewhere|returns for more)\b/i);
         for (const sentence of round.bodyEn.join(' ').split(/[.!?]+/).filter(Boolean)) {
           assert.ok(words(sentence).length <= 12, sentence);
         }

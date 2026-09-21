@@ -15,283 +15,283 @@
   MG.BOOK = [
     page('bowl-shape', 1, 'Bowl Shapes', [
       [
-        'Cats use face hairs to sense space.',
-        'A low dish leaves more room.',
+        'Whiskers are the long hairs near a cat’s nose.',
+        'A low dish has short sides and more space.',
         'A round bowl has curved sides.',
-        'Each cat can like one shape.'
+        'Different cats like different bowl shapes.'
       ],
       [
         'Cats lower their heads to eat.',
-        'Four-part trays keep food apart.',
-        'Deep bowls keep food in place.',
-        'Watch which bowl this cat picks.'
+        'A tray with four parts keeps foods apart.',
+        'A deep bowl keeps food in one place.',
+        'Your cat has its own favorite bowl.'
       ],
       [
-        'Face hairs may touch a bowl edge.',
-        'Some cats like a low rim.',
-        'Some cats like tall sides.',
-        'Your cat can show its own pick.'
+        'A cat’s whiskers may touch the bowl’s sides.',
+        'Some cats like dishes with low sides.',
+        'Some cats like bowls with tall sides.',
+        'Read which bowl your cat likes.'
       ]
     ], 'Which bowl shape does this cat like best?'),
     page('bowl-material', 2, 'What Bowls Are Made Of', [
       [
         'Clay is baked to make it hard.',
         'Metal feels cool and stays strong.',
-        'Glass is clear, so food shows.',
-        'A cat may like one bowl best.'
+        'Glass is clear, so you can see through it.',
+        'Your cat may like one kind of bowl best.'
       ],
       [
-        'Bamboo bowls feel light to lift.',
-        'A clean bowl keeps food fresh.',
-        'Hard bowls can make small sounds.',
-        'This cat may like one bowl type.'
+        'Bamboo is a plant used to make some bowls.',
+        'Bamboo bowls are usually light to carry.',
+        'Hard bowls can make a sound when tapped.',
+        'Your cat may notice these small differences.'
       ],
       [
         'Bowls can feel different to cats.',
-        'Smooth bowls are easy to wipe.',
-        'A steady bowl keeps food still.',
-        'Watch which bowl this cat picks.'
+        'Smooth bowls are easy to wipe clean.',
+        'A steady bowl keeps food from moving.',
+        'Your cat does not like every kind of bowl.'
       ]
     ], 'Which bowl type does this cat like best?'),
-    page('water-place', 3, 'Water Spots', [
+    page('water-place', 3, 'Places for Water', [
       [
-        'Cats notice where water bowls sit.',
-        'A window spot has light and views.',
-        'A bed spot stays by a bed.',
-        'Cats can pick different water spots.'
+        'Cats notice where their water bowls are.',
+        'A bowl by a window may get sunlight.',
+        'A bowl beside a bed is near their sleeping place.',
+        'Different cats like drinking in different places.'
       ],
       [
         'Cats use their tongues to drink.',
-        'A kitchen mat holds bowls still.',
-        'A scratch post spot stays near play.',
-        'Your cat can pick one safe spot.'
+        'A kitchen mat can keep a bowl from sliding.',
+        'A scratch post is a place for scratching.',
+        'Some cats like a drink near their scratch post.'
       ],
       [
-        'Fresh water has no food smell.',
-        'Cats may drink after play or food.',
-        'A calm spot can help cats drink.',
-        'Watch where this cat drinks most.'
+        'Give your cat fresh water every day.',
+        'Cats may drink after eating or playing.',
+        'A quiet place can help a cat drink.',
+        'Read where your cat likes its water bowl.'
       ]
-    ], 'Which water spot does this cat like best?'),
+    ], 'Where does this cat like its water?'),
     page('nap-texture', 4, 'Soft Places to Nap', [
       [
-        'Fuzzy mats hold warm air.',
-        'Cotton comes from plants.',
+        'Fuzzy mats can keep a cat warm.',
+        'Cotton comes from plants and is used in towels.',
         'Cats feel cloth with their paws.',
-        'Cats can pick different soft beds.'
+        'Different cats like different things to sleep on.'
       ],
       [
-        'Stuffed pads have soft filling.',
-        'Tight threads make firm cloth.',
-        'Cats turn before they lie down.',
-        'This cat may like one bed best.'
+        'Stuffed pads have soft filling inside.',
+        'Threads are the thin strings that make cloth.',
+        'A blanket with tight threads can feel firm.',
+        'Your cat may like a mat more than a blanket.'
       ],
       [
-        'Soft cloth bends under a cat.',
-        'Some cloth feels smooth or bumpy.',
-        'Cats may push cloth with their paws.',
-        'Watch what helps this cat rest.'
+        'Soft cloth bends under a cat’s weight.',
+        'Some cloth is smooth, and some has small bumps.',
+        'Cats may push a blanket with their paws.',
+        'Read what your cat likes to sleep on.'
       ]
-    ], 'Which soft bed does this cat like best?'),
-    page('nap-place', 5, 'Nap Places', [
+    ], 'What does this cat like to sleep on?'),
+    page('nap-place', 5, 'Places to Sleep', [
       [
         'Cats sleep where they feel calm.',
-        'A window bed gives light and views.',
+        'A bed by a window may be warm.',
         'A table makes shade below it.',
-        'One cat may pick what others skip.'
+        'Cats do not all like the same sleeping place.'
       ],
       [
-        'Quiet corners have fewer sudden sounds.',
-        'A bookcase can make a safe edge.',
-        'Cats may move beds as light moves.',
-        'Your cat can pick one rest spot.'
+        'Quiet corners often have fewer sudden sounds.',
+        'A bed can also sit beside a bookcase.',
+        'Cats may change sleeping places during the day.',
+        'Your cat has its own favorite place.'
       ],
       [
-        'Cats stretch before they curl up.',
-        'Sun can warm a bed by windows.',
-        'A floor spot lets cats leave fast.',
-        'Watch where this cat goes to rest.'
+        'Cats sometimes stretch before lying down.',
+        'Sunlight can warm a bed by a window.',
+        'A bed on the floor is easy to reach.',
+        'Read where your cat likes its bed.'
       ]
-    ], 'Which nap place does this cat like best?'),
-    page('toy-motion', 6, 'Toy Moves', [
+    ], 'Where does this cat like its bed?'),
+    page('toy-motion', 6, 'Moving Toys', [
       [
         'Cats watch toys with both eyes.',
-        'Slow side moves are easy to watch.',
-        'A ball rolls in a curved path.',
-        'This cat may like one toy move.'
+        'A wand can move slowly from side to side.',
+        'A ball can roll in small circles.',
+        'Your cat may like one toy movement best.'
       ],
       [
-        'Cats crouch before they jump.',
-        'A soft bounce makes one small jump.',
-        'A pause can make cats wait.',
-        'Each cat can like a new move.'
+        'Cats bend their legs before jumping.',
+        'A bouncing toy moves up and down.',
+        'A toy can stop and then slide.',
+        'Different cats like different ways of moving a toy.'
       ],
       [
-        'Cats use eyes and ears to play.',
-        'Stop and go can seem alive.',
-        'Small circles keep toys near floor.',
-        'Watch which move makes this cat play.'
+        'Cats use their eyes and ears during play.',
+        'A moving toy can look like a small animal.',
+        'A ball can roll in circles on the floor.',
+        'Read how your cat likes its toy to move.'
       ]
-    ], 'Which toy move does this cat like best?'),
-    page('toy-texture', 7, 'Toy Feel', [
+    ], 'How should you move this cat’s toy?'),
+    page('toy-texture', 7, 'Different Toys', [
       [
-        'Cats touch toys with paws and teeth.',
-        'Soft cloth feels fuzzy to paws.',
-        'Crinkle cloth makes a soft sound.',
-        'This cat can pick one toy feel.'
+        'Cats touch toys with their paws and teeth.',
+        'A fuzzy mouse toy has a soft surface.',
+        'Crinkle cloth makes a soft sound when touched.',
+        'Your cat has a favorite kind of toy.'
       ],
       [
-        'Smooth rubber has an even feel.',
-        'Soft bumps give paws a new feel.',
-        'Cats may hit toys before biting.',
-        'Cats can like different safe toy types.'
+        'A smooth rubber toy has no raised bumps.',
+        'A bumpy toy has small, soft bumps.',
+        'Cats may hit a toy before picking it up.',
+        'Different cats like different toys.'
       ],
       [
-        'Toy feel can change how cats grip.',
-        'Fuzzy cloth bends under claws.',
-        'Smooth toys can slide on floors.',
-        'Watch which toy this cat picks.'
+        'Cats use their paws to hold toys.',
+        'Fuzzy cloth bends under a cat’s claws.',
+        'Smooth toys can slide across the floor.',
+        'Read which toy your cat likes.'
       ]
-    ], 'Which toy feel does this cat like best?'),
-    page('treat-flavor', 8, 'Treat Flavors', [
+    ], 'Which toy does this cat like best?'),
+    page('treat-flavor', 8, 'Meat Treats', [
       [
-        'Cats use smell when they find food.',
-        'Chicken has a mild smell when cooked.',
-        'Salmon has a strong fish smell.',
-        'This cat can like one safe taste.'
+        'Cats smell their food before eating.',
+        'Cooked chicken and salmon smell different.',
+        'Salmon is a kind of fish.',
+        'Your cat likes some treats more than others.'
       ],
       [
-        'Turkey and beef smell different.',
-        'A small cooked treat is easy to hold.',
-        'Cats may smell a treat first.',
-        'Your cat can pick one taste.'
+        'Turkey and chicken are different kinds of birds.',
+        'Beef is meat from a cow.',
+        'Give small pieces of cooked meat without salt.',
+        'Your cat has a favorite kind of meat.'
       ],
       [
         'Cats have fewer taste buds than people.',
-        'Smell helps cats choose food.',
-        'Safe treats are plain, cooked, and small.',
-        'Watch which taste this cat picks.'
+        'Taste buds help the tongue sense different tastes.',
+        'Smell also helps a cat choose food.',
+        'Give only small, plain, cooked treats.'
       ]
-    ], 'Which treat taste does this cat like best?'),
-    page('treat-texture', 9, 'Treat Feel', [
+    ], 'Which meat treat does this cat like best?'),
+    page('treat-texture', 9, 'Different Meat Pieces', [
       [
-        'A soft bite is easy to chew.',
-        'Thin meat strips break apart.',
-        'A firm cube gives teeth more work.',
-        'This cat may like one bite feel.'
+        'A soft piece of meat is easy to chew.',
+        'Thin meat strips are long and narrow.',
+        'A meat cube is a small, solid piece.',
+        'Your cat may like one kind of meat piece.'
       ],
       [
-        'Loose meat breaks into light bits.',
-        'Cats may lick soft treats first.',
-        'Small bites help cats eat with care.',
-        'Each cat can like a different bite.'
+        'Loose meat is already in small pieces.',
+        'Cats may lick soft food before eating it.',
+        'Small pieces are easier for a cat to eat.',
+        'Cats can like different kinds of meat pieces.'
       ],
       [
-        'The tongue moves food to the back.',
-        'Teeth break cooked meat into bits.',
-        'Cats may smell and touch food first.',
-        'Watch which bite this cat picks.'
+        'A cat uses its tongue to move food.',
+        'Its teeth break meat into smaller pieces.',
+        'A cat may smell and touch food first.',
+        'Read which meat pieces your cat likes.'
       ]
-    ], 'Which treat bite does this cat like best?'),
+    ], 'Which meat pieces does this cat like best?'),
     page('brush-type', 10, 'Brushes and Combs', [
       [
-        'Cats clean fur with a rough tongue.',
-        'Brush hairs lift loose fur.',
-        'A hand mitt lets you feel strokes.',
-        'This cat may like one tool.'
+        'Cats clean their fur with a rough tongue.',
+        'A soft hair brush can remove loose fur.',
+        'A grooming mitt is worn like a glove.',
+        'Your cat may like one tool more than another.'
       ],
       [
-        'A wide comb has space between teeth.',
-        'Soft bumps move through loose fur.',
-        'Short brush times let cats pause.',
-        'Cats can like many brush tools.'
+        'A wide tooth comb has spaces between its teeth.',
+        'A bumpy brush has soft, raised parts.',
+        'Give your cat a break during brushing.',
+        'Not every cat likes the same brush.'
       ],
       [
-        'Fur can catch loose hairs.',
-        'A brush works best with light touch.',
-        'Cats may turn away when done.',
-        'Watch which tool this cat likes.'
+        'Brushing can remove loose hairs from a cat’s coat.',
+        'Use a light touch when brushing.',
+        'Stop if the cat moves away.',
+        'Read which tool your cat likes.'
       ]
-    ], 'Which brush tool does this cat like best?'),
-    page('touch-place', 11, 'Good Places to Touch', [
+    ], 'Which brush or comb does this cat like best?'),
+    page('touch-place', 11, 'Places to Touch', [
       [
-        'Face hairs sit by cat noses.',
-        'The chin sits below the mouth.',
-        'A shoulder sits above front legs.',
-        'This cat may like one touch spot.'
+        'The cheeks are on the sides of the face.',
+        'The chin is below the mouth.',
+        'The shoulders are above the front legs.',
+        'Your cat may like being touched in one place.'
       ],
       [
-        'Cats may lean toward trusted hands.',
-        'Some cats like a slow back touch.',
-        'Some cats like a short cheek touch.',
-        'Your cat can show what feels good.'
+        'A cat may lean toward a hand it trusts.',
+        'Some cats like a soft touch on the back.',
+        'Other cats like a soft touch on the cheek.',
+        'Your cat has its own likes and dislikes.'
       ],
       [
-        'Cats use bodies to say stop.',
-        'A calm body may welcome soft touch.',
-        'Turning away asks for more room.',
-        'Watch which touch spot this cat picks.'
+        'A cat may move away to stop a touch.',
+        'Use gentle hands when touching a cat.',
+        'Give the cat space when it turns away.',
+        'Read where your cat likes to be touched.'
       ]
-    ], 'Which touch spot does this cat like best?'),
+    ], 'Where does this cat like a soft touch?'),
     page('hideout', 12, 'Places to Hide', [
       [
-        'Cats hide when they need a break.',
-        'A box has light walls around space.',
-        'A cloth tunnel gives a covered path.',
-        'This cat may like one safe place.'
+        'Cats hide when they need a quiet break.',
+        'A cardboard box can be a hiding place.',
+        'A cloth tunnel has a covered path inside.',
+        'Your cat may like one hiding place best.'
       ],
       [
-        'A basket can have a roof and hole.',
-        'A wood den makes shade below.',
-        'Cats peek out before they leave.',
-        'Cats can pick many safe hide spots.'
+        'A covered basket has a top and an opening.',
+        'A wood den is a small wooden shelter.',
+        'Cats may look outside before leaving their hiding place.',
+        'Different cats like different places to hide.'
       ],
       [
-        'A hide spot lets cats watch.',
-        'Soft walls may brush cat fur.',
-        'A low hole lets cats come and go.',
-        'Watch which hide spot this cat picks.'
+        'A hiding place lets a cat rest quietly.',
+        'Soft walls may touch the cat’s fur.',
+        'A large opening lets a cat leave easily.',
+        'Read where your cat likes to hide.'
       ]
-    ], 'Which hide spot does this cat like best?'),
-    page('perch-height', 13, 'Seat Heights', [
+    ], 'Where does this cat like to hide?'),
+    page('perch-height', 13, 'High and Low Seats', [
       [
-        'Cats watch rooms from many heights.',
-        'A floor seat keeps cats down low.',
-        'A low stool lifts cats a bit.',
-        'This cat may like one seat height.'
+        'Cats watch a room from different heights.',
+        'A floor cushion is a low place to sit.',
+        'A stool is a little higher than the floor.',
+        'Your cat may like one seat best.'
       ],
       [
         'A shelf gives a view across the room.',
-        'A tall cat tree stands above things.',
-        'High seats help cats see more.',
-        'Each cat can pick a new level.'
+        'A tall cat tree has seats high above ground.',
+        'High seats help cats see more of the room.',
+        'Some cats like high seats; others like low seats.'
       ],
       [
         'Cats bend their legs before jumping up.',
-        'A firm seat gives paws room.',
-        'Cats may climb down to look around.',
-        'Watch which seat this cat picks.'
+        'A seat should be steady and wide enough.',
+        'Cats may climb down to explore the room.',
+        'Read which seat your cat likes.'
       ]
-    ], 'Which seat level does this cat like best?'),
-    page('greeting', 14, 'Quiet Hellos', [
+    ], 'Which seat does this cat like best?'),
+    page('greeting', 14, 'Ways to Say Hello', [
       [
-        'A slow blink can say hello.',
-        'Side steps can feel less scary.',
-        'A still hand gives time to sniff.',
-        'This cat may like one hello.'
+        'A slow blink can be a friendly sign.',
+        'You can greet a cat from its side.',
+        'A still hand gives the cat time to sniff.',
+        'Your cat may like one kind of hello best.'
       ],
       [
         'Cats may greet people with soft sounds.',
-        'A quiet voice makes less noise.',
-        'Cats may look, blink, or come close.',
-        'Each cat can pick a hello style.'
+        'A quiet voice is not as loud as shouting.',
+        'A cat may look, blink, or walk closer.',
+        'Different cats like different ways of saying hello.'
       ],
       [
         'Cats watch how people move.',
-        'Slow moves give cats time to choose.',
-        'Cats may walk away for more room.',
-        'Watch which hello this cat likes.'
+        'Move slowly so the cat can watch you.',
+        'Let the cat walk away if it wants space.',
+        'Read how your cat likes you to say hello.'
       ]
-    ], 'Which hello does this cat like best?')
+    ], 'How does this cat like you to say hello?')
   ];
 })(typeof globalThis !== 'undefined' ? globalThis : this);
