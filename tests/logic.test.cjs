@@ -302,6 +302,12 @@ test('shop has 27 distinct items and its most expensive accessory costs 30 coins
   for (const kind of ['treat', 'outfit', 'accessory']) assert.equal(SHOP.filter(item => item.kind === kind).length, 9);
   assert.ok(SHOP.every(item => Number.isInteger(item.price) && item.price > 0));
   assert.equal(Math.max(...SHOP.filter(item => item.kind === 'accessory').map(item => item.price)), 30);
+  const middle = new Set(SHOP.map(item => item.price).filter(price => price > 9 && price < 30));
+  assert.ok(middle.size >= 9, 'prices must climb gradually between 9 and 30 coins');
+  for (const kind of ['treat', 'outfit', 'accessory']) {
+    const prices = SHOP.filter(item => item.kind === kind).map(item => item.price);
+    assert.deepEqual(prices, [...prices].sort((a, b) => a - b), kind + ' shelf is sorted by price');
+  }
   const purchased = Logic.buy(shopState(31), 'royal-gem');
   assert.equal(purchased.coins, 1);
   assert.equal(purchased.equipped.accessories.neck, 'royal-gem');

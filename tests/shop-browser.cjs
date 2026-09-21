@@ -43,7 +43,7 @@ const { pathToFileURL } = require('node:url');
   }
   try {
     await start();
-    const purchases = { 1: 'sunny-sweater', 2: 'moon-medal', 3: 'leaf-brooch', 5: 'round-glasses', 9: 'star-hatpin', 10: 'moon-milk' };
+    const purchases = { 1: 'moon-medal', 2: 'velvet-cape', 3: 'leaf-brooch', 6: 'round-glasses', 9: 'star-hatpin', 10: 'moon-milk' };
     for (let stage = 1; stage <= 10; stage++) {
       await finishStage();
       assert.equal(await page.locator('.mg-item').count(), 27);
