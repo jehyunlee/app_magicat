@@ -203,7 +203,7 @@
     next.history = listCopy(state.history);
     next.equipped = {
       outfit: state.equipped && state.equipped.outfit || null,
-      accessory: state.equipped && state.equipped.accessory || null
+      accessories: Object.assign({}, state.equipped && state.equipped.accessories)
     };
     return next;
   }
@@ -224,7 +224,7 @@
       owned: [],
       purchased: [],
       purchasedTreats: [],
-      equipped: { outfit: null, accessory: null },
+      equipped: { outfit: null, accessories: {} },
       history: [],
       lastAnswer: null,
       lastPurchase: null
@@ -392,7 +392,7 @@
     } else if (item.kind === 'outfit') {
       next.equipped.outfit = item.id;
     } else if (item.kind === 'accessory') {
-      next.equipped.accessory = item.id;
+      next.equipped.accessories[item.slot] = item.id;
     }
     next.lastPurchase = {
       accepted: true,
@@ -406,11 +406,25 @@
     return next;
   }
 
+  function equip(state, id) {
+    var next = cloneState(state);
+    var item = MG.SHOP_BY_ID[id];
+    if (!item || next.owned.indexOf(id) === -1 || item.kind === 'treat') return next;
+    if (item.kind === 'outfit') {
+      next.equipped.outfit = next.equipped.outfit === id ? null : id;
+    } else {
+      if (next.equipped.accessories[item.slot] === id) delete next.equipped.accessories[item.slot];
+      else next.equipped.accessories[item.slot] = id;
+    }
+    return next;
+  }
+
   MG.Logic = {
     initial: initial,
     round: round,
     answer: answer,
     buy: buy,
+    equip: equip,
     START_COINS: START_COINS,
     RIGHT_REWARD: RIGHT_REWARD,
     WRONG_PENALTY: WRONG_PENALTY,

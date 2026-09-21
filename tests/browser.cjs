@@ -38,9 +38,11 @@ const path = require('node:path');
         .map(el => ['aria-label', 'title', 'alt'].map(name => el.getAttribute(name) || '').join(' '));
       const badges = Array.from(document.querySelectorAll('.mg-item__price'))
         .map(el => getComputedStyle(el, '::after').content);
-      return [document.title, document.body.innerText, ...labels, ...badges].join('\\n');
+      const feedback = document.getElementById('react-feedback');
+      const body = document.body.innerText.replace(feedback && !feedback.hidden ? feedback.innerText : '\u0000', '');
+      return [document.title, body, ...labels, ...badges].join('\\n');
     });
-    assert.equal(/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(text), false, 'UI and accessible labels must be English only');
+    assert.equal(/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(text), false, 'questions and UI stay English outside wrong-answer explanations');
     assert.equal(/\b(undefined|NaN)\b/.test(text), false, 'removed translation fields must not leak into the UI');
     assert.equal(await page.locator('html').getAttribute('lang'), 'en');
   }
@@ -90,9 +92,19 @@ const path = require('node:path');
       });
     }, { catIndex, correct });
     assert.ok(index >= 0, 'a matching choice must exist');
+    const source = await page.locator('#page-body').innerText();
+    const expectedAnswer = await page.evaluate(() => MG.Logic.round(MG.Game.getState()).options.find(option => option.loved).en);
     await page.locator('.mg-opt').nth(index).click();
     await page.locator('#overlay').waitFor({ state: 'visible' });
     await englishOnly();
+    assert.equal(await page.locator('#react-feedback').isVisible(), !correct);
+    if (!correct) {
+      assert.ok((await page.locator('#react-answer').innerText()).includes(expectedAnswer));
+      assert.ok(source.includes(await page.locator('#react-evidence').innerText()));
+      assert.ok(source.includes(await page.locator('#react-wrong-evidence').innerText()));
+      assert.match(await page.locator('#react-explanation').innerText(), /본문.*좋아하지/s);
+      await page.screenshot({ path: '/tmp/magicat-wrong-answer.png' });
+    }
     assert.equal(await page.locator('.mg-opt:disabled').count(), 4);
     await page.locator('#btn-react-next').click();
     await englishOnly();
@@ -133,7 +145,8 @@ const path = require('node:path');
     const after = await page.evaluate(() => MG.Game.getState());
     assert.equal(after.coins, JSON.parse(before).coins - item.price);
     assert.ok(after.owned.includes(item.id));
-    if (item.kind !== 'treat') assert.equal(after.equipped[item.kind], item.id);
+    if (item.kind === 'outfit') assert.equal(after.equipped.outfit, item.id);
+    if (item.kind === 'accessory') assert.equal(after.equipped.accessories[item.slot], item.id);
     await page.locator('#purchase-yes').dispatchEvent('click');
     assert.equal(await page.evaluate(() => MG.Game.getState().coins), after.coins, 'repeated confirmation must not charge twice');
   }
@@ -149,6 +162,7 @@ const path = require('node:path');
       await answer(0, true);
       {
         await page.locator('#screen-shop').waitFor({ state: 'visible' });
+        assert.equal(await page.locator('.mg-item').count(), 27);
         if (stage === 3) {
           // Buy an item from each shelf, then verify dressed image is present.
           for (let shelf = 0; shelf < 3; shelf++) await purchaseFirst(shelf, true);

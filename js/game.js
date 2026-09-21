@@ -58,10 +58,12 @@
       mood: 'calm'
     };
     var outfit = gameState && gameState.equipped && itemById(gameState.equipped.outfit);
-    var accessory = gameState && gameState.equipped && itemById(gameState.equipped.accessory);
+    var accessories = gameState && gameState.equipped ? gameState.equipped.accessories : {};
     var key;
     if (outfit) options.outfit = outfit;
-    if (accessory) options.accessory = accessory;
+    options.accessories = MG.ACCESSORY_SLOTS.map(function (slot) {
+      return itemById(accessories[slot]);
+    }).filter(Boolean);
     extra = extra || {};
     for (key in extra) {
       if (Object.prototype.hasOwnProperty.call(extra, key)) options[key] = extra[key];
@@ -121,6 +123,11 @@
     dom.reactStage = document.getElementById('react-stage');
     dom.reactVerdict = document.getElementById('react-verdict');
     dom.reactEn = document.getElementById('react-en');
+    dom.reactFeedback = document.getElementById('react-feedback');
+    dom.reactAnswer = document.getElementById('react-answer');
+    dom.reactEvidence = document.getElementById('react-evidence');
+    dom.reactWrongEvidence = document.getElementById('react-wrong-evidence');
+    dom.reactExplanation = document.getElementById('react-explanation');
     dom.reactCoin = document.getElementById('react-coin');
     dom.btnReactNext = document.getElementById('btn-react-next');
     dom.purchaseDialog = document.getElementById('purchase-dialog');
@@ -345,11 +352,20 @@
     dom.reactVerdict.className = 'mg-react__verdict ' + (outcome.correct ? 'is-good' : 'is-bad');
     dom.reactVerdict.textContent = outcome.correct ? 'Your cat likes it!' : 'Not this time.';
     dom.reactEn.textContent = outcome.correct ? outcome.action.likeEn : outcome.action.hateEn;
+    var feedback = MG.Feedback.explain(selectedRound, outcome.actionId);
+    dom.reactFeedback.hidden = !feedback;
+    var answerLetter = feedback ? String.fromCharCode(65 + selectedRound.options.indexOf(feedback.correct)) : '';
+    dom.reactAnswer.textContent = feedback ? '정답 ' + answerLetter + ': ' + feedback.correct.en : '';
+    dom.reactEvidence.textContent = feedback ? feedback.correctQuote : '';
+    dom.reactWrongEvidence.textContent = feedback ? feedback.selectedQuote : '';
+    dom.reactExplanation.textContent = feedback ? feedback.explanationKo : '';
     dom.reactCoin.textContent = (outcome.coinDelta > 0 ? '+' : '') + outcome.coinDelta + ' coins. ' + outcome.coins + ' left.';
     dom.btnReactNext.textContent = outcome.gameOver ? 'View Game Over' : (outcome.shopAfter ? 'Open Item Shop' : (outcome.complete ? 'See Ending' : 'Next Page'));
     dom.overlay.hidden = false;
     document.getElementById('app').inert = true;
-    dom.btnReactNext.focus();
+    if (feedback) dom.reactFeedback.focus({ preventScroll: true });
+    else dom.btnReactNext.focus({ preventScroll: true });
+    dom.overlay.querySelector('.mg-react').scrollTop = 0;
     playSound(outcome.correct ? 'correct' : 'wrong');
   }
 
@@ -438,7 +454,10 @@
     if (!item || !gameState || pendingPurchase || !dom.purchaseDialog) return;
     options = visualOptions({ mood: 'proud' });
     if (item.kind === 'outfit') options.outfit = item;
-    if (item.kind === 'accessory') options.accessory = item;
+    if (item.kind === 'accessory') {
+      options.accessories = options.accessories.filter(function (worn) { return worn.slot !== item.slot; });
+      options.accessories.push(item);
+    }
     owned = (gameState.owned || []).indexOf(item.id) !== -1;
     canBuy = !owned && Number(gameState.coins) - Number(item.price) >= 1;
     pendingPurchase = { item: item, finalizing: false };
@@ -499,9 +518,8 @@
 
   function equipOwnedItem(item) {
     if (!gameState || !item || (item.kind !== 'outfit' && item.kind !== 'accessory')) return;
-    if (!gameState.equipped) gameState.equipped = { outfit: null, accessory: null };
-    gameState.equipped[item.kind] = item.id;
-    shopNotice = item.en + ' is on your cat. No coins spent.';
+    gameState = MG.Logic.equip(gameState, item.id);
+    shopNotice = item.en + (isItemEquipped(item) ? ' is on your cat.' : ' is off your cat.') + ' No coins spent.';
     renderShop();
     renderHeader(shopStage);
     focusShopItem(item.id);
@@ -517,23 +535,28 @@
     playSound('shop');
   }
 
+  function isItemEquipped(item) {
+    if (!gameState || !item) return false;
+    return item.kind === 'outfit' ? gameState.equipped.outfit === item.id :
+      item.kind === 'accessory' && gameState.equipped.accessories[item.slot] === item.id;
+  }
+
   function renderShop() {
     var kinds = ['treat', 'outfit', 'accessory'];
     var owned = gameState ? gameState.owned || [] : [];
-    var equipped = gameState && gameState.equipped || {};
     if (!dom.shopCols) return;
     dom.shopLead.textContent = shopNotice + ' ' + gameState.coins + ' coins. Keep 1 coin.';
     dom.shopCols.innerHTML = kinds.map(function (kind) {
       var items = (MG.SHOP || []).filter(function (item) { return item.kind === kind; });
       return '<section class="mg-shelf"><div class="mg-shelf__h">' + escapeHtml(shopKindLabel(kind)) +
-        '<small>' + (kind === 'treat' ? 'for ending' : 'equip now') + '</small></div><div class="mg-shelf__items">' +
+        '<small>' + (kind === 'treat' ? 'for ending' : kind === 'outfit' ? 'try on first' : 'layer neck, pin, face and hat items') + '</small></div><div class="mg-shelf__items">' +
         items.map(function (item) {
           var isOwned = owned.indexOf(item.id) !== -1;
           var isEquipable = item.kind === 'outfit' || item.kind === 'accessory';
-          var isEquipped = isEquipable && equipped[item.kind] === item.id;
+          var isEquipped = isItemEquipped(item);
           var isOwnedDisabled = isOwned && !isEquipable;
           var isPoor = !isOwned && gameState.coins - item.price < 1;
-          var label = isOwned ? (isEquipable ? 'Equip ' + item.en + ' (owned' + (isEquipped ? ', currently equipped' : '') + ')' :
+          var label = isOwned ? (isEquipable ? (isEquipped ? 'Take off ' : 'Put on ') + item.en + ' (owned)' :
             item.en + ' (already owned)') : 'Try ' + item.en + ' for ' + item.price + ' coins';
           return '<button class="mg-item' + (isOwned ? ' is-owned' : '') + (isPoor ? ' is-poor' : '') +
             '" type="button" data-shop-id="' + escapeHtml(item.id) + '"' +
@@ -543,7 +566,8 @@
             '<span class="mg-item__thumb"><img src="assets/items/' + escapeHtml(item.id) +
             '.png" alt="" loading="lazy"></span>' +
             '<span class="mg-item__name">' + escapeHtml(item.en) +
-            '</span><span class="mg-item__price">' + (isOwned ? (isEquipable ? 'Owned · Equip' : 'Owned') :
+            '</span>' + (item.slot ? '<span class="mg-item__slot">' + escapeHtml(item.slot) + '</span>' : '') +
+            '<span class="mg-item__price">' + (isOwned ? (isEquipable ? (isEquipped ? 'On · Take off' : 'Owned · Put on') : 'Owned') :
               '🪙 ' + item.price + ' coins') + '</span></button>';
         }).join('') + '</div></section>';
     }).join('');
@@ -557,8 +581,7 @@
     });
     dom.shopOwned.innerHTML = owned.length ? owned.map(function (id) {
       var item = itemById(id);
-      var isEquipped = item && ((item.kind === 'outfit' && equipped.outfit === id) ||
-        (item.kind === 'accessory' && equipped.accessory === id));
+      var isEquipped = isItemEquipped(item);
       return item ? '<li><img class="mg-owned__icon" src="assets/items/' + escapeHtml(item.id) +
         '.png" alt="" loading="lazy"><b>' + escapeHtml(item.en) + '</b><span> ' +
         (item.kind === 'treat' ? '· ending treat' : (isEquipped ? '· equipped' : '· owned')) + '</span></li>' : '';

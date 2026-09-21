@@ -9,7 +9,7 @@ const { Art, CATS, SHOP } = globalThis.MG;
 
 test('every breed has a real fitted portrait for every outfit', () => {
   const outfits = SHOP.filter(item => item.kind === 'outfit');
-  assert.equal(outfits.length, 3);
+  assert.equal(outfits.length, 9);
   for (const cat of CATS) {
     for (const outfit of outfits) {
       const asset = 'assets/cats/wardrobe/' + cat.id + '--' + outfit.id + '.png';
@@ -20,12 +20,12 @@ test('every breed has a real fitted portrait for every outfit', () => {
   }
 });
 
-test('all 256 clothing/accessory combinations reference existing image assets', () => {
+test('all 1600 clothing and single-accessory combinations reference existing image assets', () => {
   let combinations = 0;
   for (const cat of CATS) {
     for (const outfit of [null, ...SHOP.filter(i => i.kind === 'outfit')]) {
       for (const accessory of [null, ...SHOP.filter(i => i.kind === 'accessory')]) {
-        const svg = Art.cat(cat, { outfit, accessory });
+        const svg = Art.cat(cat, { outfit, accessories: accessory ? [accessory] : [] });
         for (const [, href] of svg.matchAll(/href="([^"]+)"/g)) {
           assert.ok(fs.existsSync(path.join(__dirname, '..', href)), href);
         }
@@ -37,7 +37,22 @@ test('all 256 clothing/accessory combinations reference existing image assets', 
       }
     }
   }
-  assert.equal(combinations, 256);
+  assert.equal(combinations, 1600);
+});
+
+test('four accessory slots layer over every fitted outfit in the right order', () => {
+  const accessories = ['royal-gem', 'leaf-brooch', 'round-glasses', 'star-hatpin']
+    .map(id => SHOP.find(item => item.id === id));
+  for (const cat of CATS) {
+    for (const outfit of SHOP.filter(item => item.kind === 'outfit')) {
+      const svg = Art.cat(cat, { outfit, accessories: accessories.slice().reverse() });
+      assert.equal((svg.match(/class="cat-accessory"/g) || []).length, 4);
+      const positions = ['neck', 'chest', 'face', 'hat'].map(slot => svg.indexOf('data-slot="' + slot + '"'));
+      assert.ok(positions.every((position, index) => position > 0 && (!index || position > positions[index - 1])));
+      assert.ok(svg.indexOf('class="cat-clothing"') < positions[0]);
+      assert.doesNotMatch(svg, /undefined|NaN/);
+    }
+  }
 });
 
 test('every shop item has an illustrated catalog thumbnail', () => {

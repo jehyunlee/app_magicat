@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-for (const file of ['data/actions', 'data/cats', 'data/book', 'data/shop', 'logic']) require('../js/' + file + '.js');
-const { CATS, ACTION_BY_ID, BOOK, SHOP, Logic } = globalThis.MG;
+for (const file of ['data/actions', 'data/cats', 'data/book', 'data/shop', 'logic', 'feedback']) require('../js/' + file + '.js');
+const { CATS, ACTION_BY_ID, BOOK, SHOP, Logic, Feedback } = globalThis.MG;
 
 test('content contains English only without Korean translation properties', () => {
   for (const records of [CATS, BOOK, SHOP, Object.values(ACTION_BY_ID)]) {
@@ -279,7 +279,8 @@ test('shop purchases deduct exact prices, equip items, and preserve final coin',
     assert.equal(next.coins, 1);
     assert.ok(next.owned.includes(item.id));
     if (kind === 'treat') assert.ok(next.purchasedTreats.includes(item.id));
-    else assert.equal(next.equipped[kind], item.id);
+    else if (kind === 'accessory') assert.equal(next.equipped.accessories[item.slot], item.id);
+    else assert.equal(next.equipped.outfit, item.id);
     assert.equal(Logic.buy(next, item.id).lastPurchase.accepted, false);
     assert.equal(Logic.buy({ ...state, coins: item.price }, item.id).lastPurchase.accepted, false);
   }
@@ -288,4 +289,73 @@ test('shop purchases deduct exact prices, equip items, and preserve final coin',
   assert.equal(Logic.buy(reset, items[0].id).lastPurchase.accepted, false);
   assert.deepEqual(reset.owned, []);
   assert.equal(reset.coins, 6);
+});
+
+const shopState = coins => {
+  const start = Logic.initial(CATS[0]);
+  return { ...Logic.answer(start, Logic.round(start).correctId), coins };
+};
+
+test('shop has 27 distinct items and its most expensive accessory costs 30 coins', () => {
+  assert.equal(SHOP.length, 27);
+  assert.equal(new Set(SHOP.map(item => item.id)).size, 27);
+  for (const kind of ['treat', 'outfit', 'accessory']) assert.equal(SHOP.filter(item => item.kind === kind).length, 9);
+  assert.ok(SHOP.every(item => Number.isInteger(item.price) && item.price > 0));
+  assert.equal(Math.max(...SHOP.filter(item => item.kind === 'accessory').map(item => item.price)), 30);
+  const purchased = Logic.buy(shopState(31), 'royal-gem');
+  assert.equal(purchased.coins, 1);
+  assert.equal(purchased.equipped.accessories.neck, 'royal-gem');
+  assert.equal(Logic.buy(shopState(30), 'royal-gem').lastPurchase.accepted, false);
+});
+
+test('clothes and four accessory slots can be worn, replaced and removed independently', () => {
+  let state = shopState(100);
+  for (const id of ['forest-vest', 'royal-gem', 'leaf-brooch', 'round-glasses', 'star-hatpin']) state = Logic.buy(state, id);
+  assert.equal(state.equipped.outfit, 'forest-vest');
+  assert.deepEqual(state.equipped.accessories, { neck: 'royal-gem', chest: 'leaf-brooch', face: 'round-glasses', hat: 'star-hatpin' });
+  const snapshot = JSON.stringify(state);
+  const replacement = Logic.buy(state, 'star-bow');
+  assert.equal(JSON.stringify(state), snapshot);
+  assert.equal(replacement.equipped.accessories.neck, 'star-bow');
+  assert.equal(replacement.equipped.accessories.face, 'round-glasses');
+  const withoutGlasses = Logic.equip(state, 'round-glasses');
+  assert.equal(withoutGlasses.equipped.accessories.face, undefined);
+  assert.equal(withoutGlasses.equipped.accessories.neck, 'royal-gem');
+  assert.equal(withoutGlasses.coins, state.coins);
+  assert.deepEqual(Logic.equip(withoutGlasses, 'round-glasses').equipped, state.equipped);
+  assert.equal(Logic.equip(state, 'night-cape').equipped.outfit, 'forest-vest');
+  assert.equal(Logic.equip(state, 'forest-vest').equipped.outfit, null);
+});
+
+test('wrong answers name the right action and quote actual evidence with Korean feedback', () => {
+  const covered = new Set();
+  for (const cat of CATS) {
+    for (let seed = 1; seed <= 8; seed++) {
+      const state = { ...Logic.initial(cat), seed: Math.imul(seed, 0x9e3779b9) >>> 0 };
+      for (let stage = 1; stage <= 10; stage++) {
+        const round = Logic.round({ ...state, stage });
+        assert.equal(Feedback.explain(round, round.correctId), null);
+        assert.equal(Feedback.explain(round, 'not-a-choice'), null);
+        for (const selected of round.options.filter(option => option.id !== round.correctId)) {
+          const explanation = Feedback.explain(round, selected.id);
+          assert.equal(explanation.correct.id, round.correctId);
+          assert.equal(explanation.selected.id, selected.id);
+          assert.ok(round.bodyEn.join(' ').includes(explanation.correctQuote));
+          assert.ok(round.bodyEn.join(' ').includes(explanation.selectedQuote));
+          assert.ok(explanation.selectedQuote.includes('does not like'));
+          assert.match(explanation.explanationKo, /본문/);
+          assert.match(explanation.explanationKo, /좋아하지/);
+          assert.ok(explanation.explanationKo.includes(explanation.correct.en));
+          covered.add(selected.id);
+        }
+      }
+    }
+  }
+  assert.equal(covered.size, 56);
+});
+
+test('feedback refuses to invent evidence that is not in the current page', () => {
+  const round = Logic.round(Logic.initial(CATS[0]));
+  const wrong = round.options.find(option => option.id !== round.correctId);
+  assert.throws(() => Feedback.explain({ ...round, bodyEn: ['No taste information here.'] }, wrong.id), /actual text/);
 });

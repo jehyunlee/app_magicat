@@ -129,11 +129,17 @@
 
 <!-- ══ Reaction overlay ══ -->
 <div id="overlay" class="mg-overlay" hidden>
-  <div class="mg-react" role="alertdialog" aria-modal="true" aria-labelledby="react-verdict" aria-describedby="react-en">
+  <div class="mg-react" role="alertdialog" aria-modal="true" aria-labelledby="react-verdict" aria-describedby="react-en react-feedback">
     <div id="react-stage" class="mg-room mg-room--small"></div>
     <div class="mg-react__text">
       <p id="react-verdict" class="mg-react__verdict"></p>
       <p id="react-en" class="mg-react__en"></p>
+      <section id="react-feedback" class="mg-feedback" lang="ko" tabindex="-1" hidden>
+        <h3 id="react-answer"></h3>
+        <blockquote id="react-evidence" lang="en"></blockquote>
+        <blockquote id="react-wrong-evidence" lang="en"></blockquote>
+        <p id="react-explanation"></p>
+      </section>
       <p id="react-coin" class="mg-react__coin"></p>
     </div>
     <button id="btn-react-next" class="mg-btn mg-btn--big" type="button">Next Page</button>
@@ -167,6 +173,7 @@
 <script src="js/art.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/logic.js"></script>
+<script src="js/feedback.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>
