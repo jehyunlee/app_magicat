@@ -2,7 +2,7 @@
   'use strict';
   var MG = root.MG = root.MG || {};
   var SAVE_KEY = 'magicat.save.';
-  var CARDS_KEY = 'magicat.cards';
+  var CARDS_KEY = 'magicat.cards.';
   var SLOTS = 3;
   var VERSION = 2;
 
@@ -70,18 +70,23 @@
     return slots;
   }
 
-  /* One card book is shared by every save slot. */
-  function listCards() {
-    var cards = readJson(CARDS_KEY);
+  /*
+   * Each player (family character) owns a card book. Every save made as that
+   * player shares it; other players never see it.
+   */
+  function listCards(character) {
+    if (!MG.FAMILY_BY_ID[character]) return [];
+    var cards = readJson(CARDS_KEY + character);
     return Array.isArray(cards) ? cards.filter(function (card) {
-      return card && MG.CAT_BY_ID[card.cat] && MG.FAMILY_BY_ID[card.character] && card.scene >= 0 && card.scene < MG.SCENES_PER_PAIR;
+      return card && MG.CAT_BY_ID[card.cat] && card.character === character && card.scene >= 0 && card.scene < MG.SCENES_PER_PAIR;
     }) : [];
   }
 
   function addCard(character, cat, scene, stage) {
-    var cards = listCards();
+    if (!MG.FAMILY_BY_ID[character]) throw new Error('Cards belong to a family member');
+    var cards = listCards(character);
     var existing = cards.filter(function (card) {
-      return card.character === character && card.cat === cat && card.scene === scene;
+      return card.cat === cat && card.scene === scene;
     })[0];
     var fresh = !existing;
     if (existing) {
@@ -90,7 +95,7 @@
     } else {
       cards.push({ character: character, cat: cat, scene: scene, count: 1, stage: stage, lastStage: stage, earnedAt: Date.now() });
     }
-    writeJson(CARDS_KEY, cards);
+    writeJson(CARDS_KEY + character, cards);
     return { fresh: fresh, card: existing || cards[cards.length - 1], total: cards.length };
   }
 

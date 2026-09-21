@@ -22,7 +22,7 @@ FAMILY = {
     'dad': 'Dad: a grown man with short parted brown hair, square glasses and a warm smile, wearing a mustard knitted cardigan, tan shirt and blue jeans',
     'mom': 'Mom: a grown woman with shoulder-length brown hair, round glasses and a gentle smile, wearing a sage green cardigan over a cream dress',
     'jeongan': 'Jeongan: a young child with a short chin-length brown bob, round glasses and a cheerful smile, wearing a sky blue hoodie and yellow shorts',
-    'suan': 'Suan: a slim young child of normal, average build (not chubby) with a slender, gently oval face (not a round chubby face), long brown hair past the shoulders, a happy closed-eye smile and NO glasses at all, wearing a coral pink sweater and denim overalls',
+    'suan': 'Suan: a small, slim young child (the youngest and shortest in the family, a little shorter than her sibling Jeongan) of normal build with a slender, gently oval face, long brown hair past the shoulders, a happy closed-eye smile and NO glasses at all, wearing a coral pink sweater and denim overalls',
 }
 CATS = {
     'korean-shorthair': 'orange tabby cat with a purple star wizard hat',
@@ -90,7 +90,11 @@ def character(member):
     prompt = ('Image 1 is a simple hand-drawn face reference. Draw this same character as a full-body standing figure with a normal slim build, front view, friendly wave: '
               + FAMILY[member] + '. Keep the face exactly like the reference (same hair shape, glasses or no glasses, same smile) but paint everything in the '
               + STYLE + ' of image 2. Plain soft cream background, no text, whole body visible with margins.')
-    image = generate([inline(ROOT / 'assets/family/ref' / (member + '-face.png')), inline(ROOT / 'assets/cats/korean-shorthair.png'), {'text': prompt}], '3:4', '1K')
+    parts = [inline(ROOT / 'assets/family/ref' / (member + '-face.png')), inline(ROOT / 'assets/cats/korean-shorthair.png')]
+    if member == 'suan':
+        parts.append(inline(ROOT / 'assets/family/jeongan.png'))
+        prompt += ' Image 3 shows her sibling Jeongan at full height in the same canvas; draw Suan using the SAME canvas framing so that she stands slightly SHORTER than Jeongan, with a child-sized body and generous empty space above her head.'
+    image = generate(parts + [{'text': prompt}], '3:4', '1K')
     image.thumbnail((768, 1024), Image.Resampling.LANCZOS)
     image.save(target, optimize=True)
     return 'Saved ' + target.name

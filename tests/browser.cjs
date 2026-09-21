@@ -232,9 +232,10 @@ const path = require('node:path');
     assert.match(await page.locator('.mg-restart__ask').innerText(), /Restart\?/);
     await page.waitForFunction(() => getComputedStyle(document.getElementById('screen-ending')).opacity === '1');
     await page.screenshot({ path: '/tmp/magic-cat-ending.png' });
-    // Card book: every cleared stage added a card shared across saves.
+    // Card book: every cleared stage added a card to Dad's own book.
     await page.locator('#btn-cards').click();
     await page.locator('#cards-overlay').waitFor({ state: 'visible' });
+    assert.match(await page.locator('#cards-title').innerText(), /^Dad's Card Book$/);
     const cardCount = await page.locator('.mg-cards__card').count();
     assert.equal(cardCount, 4, 'twenty clears with four scenes collect all four cards for the pair');
     await page.locator('.mg-cards__card').nth(1).click();
@@ -284,8 +285,36 @@ const path = require('node:path');
     assert.equal(await page.evaluate(() => MG.Game.getCharacter().id), 'dad');
     assert.equal(await page.locator('#btn-cards').isVisible(), true);
     await page.locator('#btn-cards').click();
-    assert.equal(await page.locator('.mg-cards__card').count(), cardCount, 'the loaded save shares the same card book');
+    assert.match(await page.locator('#cards-title').innerText(), /^Dad's Card Book$/);
+    assert.equal(await page.locator('.mg-cards__card').count(), cardCount, "Dad's loaded save shows Dad's own book");
     await page.locator('#btn-cards-close').click();
+    // Another player's save must not see Dad's cards.
+    await page.goto(url);
+    await select(2, 3);
+    await page.locator('#btn-cards').click();
+    assert.match(await page.locator('#cards-title').innerText(), /^Suan's Card Book$/);
+    assert.equal(await page.locator('.mg-cards__card').count(), 0, 'Suan starts with her own empty book');
+    assert.match(await page.locator('#cards-count').innerText(), /No cards yet/);
+    await page.locator('#btn-cards-close').click();
+    await answer(2, true);
+    await page.locator('#btn-save').click();
+    await page.locator('[data-save-slot="3"]').click();
+    await page.locator('#btn-saves-close').click();
+    await page.goto(url);
+    await page.locator('#btn-load').click();
+    await page.locator('[data-load-slot="3"]').click();
+    await page.locator('#screen-shop').waitFor({ state: 'visible' });
+    await page.locator('#btn-cards').click();
+    assert.match(await page.locator('#cards-title').innerText(), /^Suan's Card Book$/);
+    assert.equal(await page.locator('.mg-cards__card').count(), 1, "Suan's save shows only Suan's card");
+    await page.locator('#btn-cards-close').click();
+    // From the title, pick whose book to open; Dad's book is untouched by Suan's play.
+    await page.goto(url);
+    await page.locator('#btn-title-cards').click();
+    assert.equal(await page.locator('.mg-cards__owner').count(), 4);
+    await page.locator('[data-card-owner="dad"]').click();
+    assert.equal(await page.locator('.mg-cards__card').count(), cardCount);
+    await page.keyboard.press('Escape');
     // Verify both remaining ending personalities with purchased treats, using other family members.
     const indexes = await page.evaluate(() => ['playful', 'dizzy'].map(p => MG.CATS.findIndex(c => c.personality === p)));
     for (const [member, index] of indexes.entries()) {

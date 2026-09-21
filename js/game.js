@@ -159,6 +159,7 @@
     dom.playCard = document.getElementById('play-card');
     dom.btnPlayNext = document.getElementById('btn-play-next');
     dom.cardsOverlay = document.getElementById('cards-overlay');
+    dom.cardsTitle = document.getElementById('cards-title');
     dom.cardsCount = document.getElementById('cards-count');
     dom.cardsGrid = document.getElementById('cards-grid');
     dom.cardView = document.getElementById('card-view');
@@ -830,7 +831,9 @@
     beginStage(gameState.stage);
   }
 
-  /* ── Card book (shared by every save) ──────────────────── */
+  /* ── Card book (one per player; shared by that player's saves) ── */
+  var cardOwner = null;
+
   function cardImage(card) {
     return MG.playScene(card.character, card.cat, card.scene);
   }
@@ -840,12 +843,16 @@
       ' · Stage ' + card.stage + (card.count > 1 ? ' · x' + card.count : '');
   }
 
-  function openCards() {
-    var cards = MG.Store.listCards();
+  function openCards(ownerId) {
+    cardOwner = MG.FAMILY_BY_ID[ownerId] ? ownerId : (selectedCharacter ? selectedCharacter.id : null);
+    if (!cardOwner) return openCardOwners();
+    var owner = MG.FAMILY_BY_ID[cardOwner];
+    var cards = MG.Store.listCards(cardOwner);
     cardViewIndex = -1;
     dom.cardView.hidden = true;
     dom.cardsGrid.hidden = false;
-    dom.cardsCount.textContent = cards.length ? cards.length + ' of ' + (MG.FAMILY.length * MG.CATS.length * MG.SCENES_PER_PAIR) + ' cards. Tap a card to see it big.' : 'No cards yet. Clear a stage to earn one.';
+    dom.cardsTitle.textContent = owner.en + "'s Card Book";
+    dom.cardsCount.textContent = cards.length ? cards.length + ' of ' + (MG.CATS.length * MG.SCENES_PER_PAIR) + ' cards. Tap a card to see it big.' : 'No cards yet. Clear a stage to earn one.';
     dom.cardsGrid.innerHTML = cards.map(function (card, index) {
       return '<button class="mg-cards__card" type="button" data-card-index="' + index + '" aria-label="' + escapeHtml(cardCaption(card)) + '">' +
         '<img src="' + cardImage(card) + '" alt="" loading="lazy"><span>' + escapeHtml(MG.CAT_BY_ID[card.cat].en) + '</span></button>';
@@ -858,8 +865,28 @@
     dom.btnCardsClose.focus({ preventScroll: true });
   }
 
+  /* From the title no player is active yet, so ask whose book to open. */
+  function openCardOwners() {
+    cardViewIndex = -1;
+    dom.cardView.hidden = true;
+    dom.cardsGrid.hidden = false;
+    dom.cardsTitle.textContent = 'Card Books';
+    dom.cardsCount.textContent = 'Whose card book do you want to see?';
+    dom.cardsGrid.innerHTML = MG.FAMILY.map(function (member) {
+      var count = MG.Store.listCards(member.id).length;
+      return '<button class="mg-cards__card mg-cards__owner" type="button" data-card-owner="' + member.id + '" aria-label="' + escapeHtml(member.en + "'s card book, " + count + ' cards') + '">' +
+        '<img src="assets/family/' + member.id + '.png" alt="" loading="lazy"><span>' + escapeHtml(member.en) + ' · ' + count + '</span></button>';
+    }).join('');
+    Array.prototype.forEach.call(dom.cardsGrid.querySelectorAll('[data-card-owner]'), function (button) {
+      button.addEventListener('click', function () { openCards(button.getAttribute('data-card-owner')); });
+    });
+    dom.cardsOverlay.hidden = false;
+    setAppInert(true);
+    dom.btnCardsClose.focus({ preventScroll: true });
+  }
+
   function viewCard(index) {
-    var cards = MG.Store.listCards();
+    var cards = MG.Store.listCards(cardOwner);
     if (!cards.length) return;
     cardViewIndex = (index + cards.length) % cards.length;
     dom.cardsGrid.hidden = true;
@@ -940,10 +967,10 @@
     dom.btnSave.addEventListener('click', function () { openSaves('save'); });
     dom.btnLoad.addEventListener('click', function () { openSaves('load'); });
     dom.btnSavesClose.addEventListener('click', closeSaves);
-    dom.btnCards.addEventListener('click', openCards);
-    dom.btnTitleCards.addEventListener('click', openCards);
+    dom.btnCards.addEventListener('click', function () { openCards(); });
+    dom.btnTitleCards.addEventListener('click', function () { openCardOwners(); });
     dom.btnCardsClose.addEventListener('click', closeCards);
-    dom.btnCardBack.addEventListener('click', function () { openCards(); });
+    dom.btnCardBack.addEventListener('click', function () { openCards(cardOwner); });
     dom.btnCardPrev.addEventListener('click', function () { viewCard(cardViewIndex - 1); });
     dom.btnCardNext.addEventListener('click', function () { viewCard(cardViewIndex + 1); });
     document.addEventListener('keydown', function (event) {

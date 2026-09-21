@@ -39,9 +39,9 @@ test('corrupt or outdated saves load as empty instead of crashing', () => {
   assert.equal(Store.loadGame(3), null);
 });
 
-test('the card book is shared by all saves and counts repeated scenes', () => {
+test('each player owns a card book that other players cannot see', () => {
   Store.backend = memory();
-  assert.deepEqual(Store.listCards(), []);
+  assert.deepEqual(Store.listCards('dad'), []);
   const first = Store.addCard('dad', 'persian', 2, 5);
   assert.equal(first.fresh, true);
   assert.equal(first.total, 1);
@@ -50,10 +50,18 @@ test('the card book is shared by all saves and counts repeated scenes', () => {
   assert.equal(again.card.count, 2);
   assert.equal(again.card.stage, 5);
   Store.addCard('suan', 'bengal', 0, 1);
+  assert.equal(Store.listCards('dad').length, 1, 'Dad only sees his own cards');
+  assert.equal(Store.listCards('suan').length, 1, 'Suan only sees her own cards');
+  assert.deepEqual(Store.listCards('mom'), []);
+  assert.deepEqual(Store.listCards('nobody'), []);
+  assert.throws(() => Store.addCard('nobody', 'persian', 0, 1), /family member/);
+  // Two saves by the same player share that player's book; another player's save does not.
   Store.saveGame(1, Logic.initial(CATS[0], 'dad'), 'stage');
-  Store.saveGame(2, Logic.initial(CATS[5], 'suan'), 'stage');
-  assert.equal(Store.listCards().length, 2, 'both saves see the same cards');
-  Store.backend.setItem('magicat.cards', JSON.stringify([{ character: 'ghost', cat: 'persian', scene: 0 }, { character: 'mom', cat: 'sphynx', scene: 9 }]));
-  assert.deepEqual(Store.listCards(), []);
+  Store.saveGame(2, Logic.initial(CATS[5], 'dad'), 'stage');
+  Store.saveGame(3, Logic.initial(CATS[7], 'suan'), 'stage');
+  for (const slot of [1, 2]) assert.equal(Store.listCards(Store.loadGame(slot).state.character).length, 1);
+  assert.equal(Store.listCards(Store.loadGame(3).state.character)[0].cat, 'bengal');
+  Store.backend.setItem('magicat.cards.mom', JSON.stringify([{ character: 'dad', cat: 'persian', scene: 0 }, { character: 'mom', cat: 'sphynx', scene: 9 }]));
+  assert.deepEqual(Store.listCards('mom'), [], 'cards filed under the wrong player or invalid scenes are ignored');
   assert.equal(FAMILY.length, 4);
 });
