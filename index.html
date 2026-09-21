@@ -13,6 +13,7 @@
 
   <header id="topbar" class="mg-top" hidden>
     <div class="mg-top__cat">
+      <img id="top-character-art" class="mg-top__face" alt="">
       <span id="top-cat-art" class="mg-top__art" aria-hidden="true"></span>
       <span id="top-cat-name" class="mg-top__name"></span>
     </div>
@@ -26,6 +27,8 @@
       <span class="mg-purse__count"><strong id="purse-count">0</strong><span>coins</span></span>
       <span class="mg-purse__delta" id="purse-delta" aria-hidden="true"></span>
     </div>
+    <button id="btn-save" class="mg-icon-btn" type="button" title="Save game" aria-label="Save game" aria-haspopup="dialog">💾</button>
+    <button id="btn-cards" class="mg-icon-btn" type="button" title="Card Book" aria-label="Card Book" aria-haspopup="dialog">🃏</button>
     <button id="btn-mute" class="mg-icon-btn" type="button" title="Toggle sound" aria-label="Toggle sound">🔊</button>
   </header>
 
@@ -36,15 +39,30 @@
       <div class="mg-title__art" id="title-art" aria-hidden="true"></div>
       <h1 class="mg-title__logo"><span>Magic</span><span>Cat</span></h1>
       <p class="mg-title__sub">Read close. Every cat likes its own things.</p>
-      <button id="btn-start" class="mg-btn mg-btn--big" type="button">Start Game</button>
+      <div class="mg-row mg-title__actions">
+        <button id="btn-start" class="mg-btn mg-btn--big" type="button">Start Game</button>
+        <button id="btn-load" class="mg-btn mg-btn--ghost" type="button" aria-haspopup="dialog">Load Game</button>
+        <button id="btn-title-cards" class="mg-btn mg-btn--ghost" type="button" aria-haspopup="dialog">Card Book</button>
+      </div>
       <ul class="mg-title__rules">
-        <li>🐾 Pick one cat</li>
+        <li>👨‍👩‍👧‍👦 Pick who plays, then pick a cat</li>
         <li>📖 Read one page at each stage</li>
         <li>🪙 Good pick: <b>+3 coins</b>. Bad pick: <b>-2 coins</b></li>
         <li>🛍️ Visit the shop after every stage</li>
-        <li>🎉 Finish 10 stages</li>
+        <li>🃏 Clear a stage to earn a card</li>
+        <li>🎉 Finish 20 stages</li>
       </ul>
       <p class="mg-care-note">This cat has its own likes.<br>Ask an adult or a vet about cat care.</p>
+    </section>
+
+    <!-- ══ Character selection ══ -->
+    <section id="screen-character" class="mg-screen mg-select" hidden>
+      <h2 class="mg-h2">Who plays today?</h2>
+      <p class="mg-lead">Pick a family member. They will play with your cat.</p>
+      <div id="character-grid" class="mg-family" role="group" aria-label="4 family members"></div>
+      <div class="mg-row">
+        <button id="btn-character-confirm" class="mg-btn mg-btn--big" type="button" disabled>Pick a cat next</button>
+      </div>
     </section>
 
     <!-- ══ Cat selection ══ -->
@@ -115,12 +133,18 @@
 
     <!-- ══ Ending ══ -->
     <section id="screen-ending" class="mg-screen mg-ending" hidden>
-      <h2 class="mg-h2" id="ending-title">🎉 Book done!</h2>
+      <h2 class="mg-h2" id="ending-title">🎉 All 20 stages done!</h2>
+      <div id="ending-dance" class="mg-dance" role="img" aria-label="Dance party"></div>
+      <p id="ending-dance-line" class="mg-ending__line"></p>
       <div id="ending-stage" class="mg-room mg-room--party"></div>
       <p id="ending-line" class="mg-ending__line"></p>
       <ul id="ending-stats" class="mg-stats"></ul>
-      <div class="mg-row">
-        <button id="btn-end-again" class="mg-btn mg-btn--big" type="button">Start Over</button>
+      <div class="mg-restart">
+        <p class="mg-restart__ask">Restart?</p>
+        <div class="mg-row">
+          <button id="btn-end-restart" class="mg-btn mg-btn--big" type="button">Restart</button>
+          <button id="btn-end-title" class="mg-btn mg-btn--ghost" type="button">Back to Title</button>
+        </div>
       </div>
     </section>
 
@@ -143,6 +167,48 @@
       <p id="react-coin" class="mg-react__coin"></p>
     </div>
     <button id="btn-react-next" class="mg-btn mg-btn--big" type="button">Next Page</button>
+  </div>
+</div>
+
+<!-- ══ Stage clear play scene ══ -->
+<div id="play-overlay" class="mg-overlay" hidden>
+  <div class="mg-play" role="dialog" aria-modal="true" aria-labelledby="play-title">
+    <h2 id="play-title" class="mg-play__title"></h2>
+    <img id="play-image" class="mg-play__image" alt="">
+    <p id="play-line" class="mg-play__line"></p>
+    <p id="play-card" class="mg-play__card"></p>
+    <button id="btn-play-next" class="mg-btn mg-btn--big" type="button">Open Item Shop</button>
+  </div>
+</div>
+
+<!-- ══ Card book ══ -->
+<div id="cards-overlay" class="mg-overlay" hidden>
+  <div class="mg-cards" role="dialog" aria-modal="true" aria-labelledby="cards-title">
+    <div class="mg-cards__head">
+      <h2 id="cards-title">Card Book</h2>
+      <p id="cards-count" class="mg-cards__count"></p>
+      <button id="btn-cards-close" class="mg-btn mg-btn--ghost" type="button">Close</button>
+    </div>
+    <div id="cards-grid" class="mg-cards__grid"></div>
+    <div id="card-view" class="mg-cardview" hidden>
+      <button id="btn-card-prev" class="mg-icon-btn mg-cardview__nav" type="button" aria-label="Previous card">‹</button>
+      <figure class="mg-cardview__figure">
+        <img id="card-view-image" alt="">
+        <figcaption id="card-view-caption"></figcaption>
+      </figure>
+      <button id="btn-card-next" class="mg-icon-btn mg-cardview__nav" type="button" aria-label="Next card">›</button>
+      <button id="btn-card-back" class="mg-btn mg-btn--ghost" type="button">Back to all cards</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Save and load ══ -->
+<div id="saves-dialog" class="mg-overlay" hidden>
+  <div class="mg-saves" role="dialog" aria-modal="true" aria-labelledby="saves-title">
+    <h2 id="saves-title">Save Game</h2>
+    <p id="saves-note" class="mg-saves__note"></p>
+    <ul id="saves-list" class="mg-saves__list"></ul>
+    <button id="btn-saves-close" class="mg-btn mg-btn--ghost" type="button">Close</button>
   </div>
 </div>
 
@@ -170,6 +236,8 @@
 <script src="js/data/cats.js"></script>
 <script src="js/data/book.js"></script>
 <script src="js/data/shop.js"></script>
+<script src="js/data/family.js"></script>
+<script src="js/store.js"></script>
 <script src="js/art.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/logic.js"></script>

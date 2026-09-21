@@ -9,10 +9,8 @@ const words = text => text.match(/[A-Za-z]+(?:['’][A-Za-z]+)?/g) || [];
 
 test('reading facts and choice buttons use short English sentences', () => {
   for (const page of BOOK) {
-    for (const passage of page.variants) {
-      for (const sentence of passage) {
-        assert.ok(words(sentence).length <= 10, sentence);
-      }
+    for (const sentence of [...page.facts.intro, ...page.facts.detail, ...page.facts.tip]) {
+      assert.ok(words(sentence).length <= 10, sentence);
     }
     assert.ok(words(page.askEn).length <= 10, page.askEn);
   }
@@ -26,7 +24,7 @@ test('reading facts and choice buttons use short English sentences', () => {
 test('hard vocabulary is replaced in player-facing reading content', () => {
   const text = [
     ...ACTIONS.flatMap(action => [action.en, action.hint, action.likeEn, action.hateEn]),
-    ...BOOK.flatMap(page => [page.titleEn, page.askEn, ...page.variants.flat()])
+    ...BOOK.flatMap(page => [page.titleEn, page.askEn, ...page.facts.intro, ...page.facts.detail, ...page.facts.tip])
   ].join(' ');
   assert.doesNotMatch(text, /\b(aroma|ceramic|silicone|preference|bristles|gobbling|sheltered|texture|sensory)\b/i);
 });

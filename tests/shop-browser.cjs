@@ -11,6 +11,8 @@ const { pathToFileURL } = require('node:url');
   async function start() {
     await page.goto(url);
     await page.locator('#btn-start').click();
+    await page.locator('.mg-family__card').first().click();
+    await page.locator('#btn-character-confirm').click();
     await page.locator('.mg-card').first().click();
     await page.locator('#cat-preview button').click();
     for (let i = 0; i < 3; i++) await page.locator('#btn-intro-next').click();
@@ -27,6 +29,10 @@ const { pathToFileURL } = require('node:url');
       assert.match(await page.locator('#react-explanation').innerText(), /본문/);
     }
     await page.locator('#btn-react-next').click();
+    if (correct) {
+      await page.locator('#play-overlay').waitFor({ state: 'visible' });
+      await page.locator('#btn-play-next').click();
+    }
   }
   async function buy(id, cancelFirst = false) {
     const before = await page.evaluate(() => JSON.stringify(MG.Game.getState()));
@@ -44,7 +50,7 @@ const { pathToFileURL } = require('node:url');
   try {
     await start();
     const purchases = { 1: 'moon-medal', 2: 'velvet-cape', 3: 'leaf-brooch', 6: 'round-glasses', 9: 'star-hatpin', 10: 'moon-milk' };
-    for (let stage = 1; stage <= 10; stage++) {
+    for (let stage = 1; stage <= 20; stage++) {
       await finishStage();
       assert.equal(await page.locator('.mg-item').count(), 27);
       if (purchases[stage]) await buy(purchases[stage], true);
@@ -70,9 +76,9 @@ const { pathToFileURL } = require('node:url');
     }
     await page.locator('#screen-ending').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#ending-stage .cat-accessory').count(), 4);
-    assert.equal(await page.evaluate(() => MG.Game.getState().coins), 2);
+    assert.equal(await page.evaluate(() => MG.Game.getState().coins), 32);
     await start();
-    for (let stage = 1; stage <= 10; stage++) {
+    for (let stage = 1; stage <= 20; stage++) {
       await finishStage();
       if (stage === 1) {
         await page.locator('[data-shop-id="royal-gem"]').click();

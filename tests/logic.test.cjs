@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-for (const file of ['data/actions', 'data/cats', 'data/book', 'data/shop', 'logic', 'feedback']) require('../js/' + file + '.js');
+for (const file of ['data/actions', 'data/cats', 'data/book', 'data/shop', 'data/family', 'logic', 'feedback']) require('../js/' + file + '.js');
 const { CATS, ACTION_BY_ID, BOOK, SHOP, Logic, Feedback } = globalThis.MG;
 
 test('content contains English only without Korean translation properties', () => {
@@ -18,15 +18,20 @@ const GROUPS = [
   'bowl-shape', 'bowl-material', 'water-place', 'nap-texture',
   'nap-place', 'toy-motion', 'toy-texture', 'treat-flavor',
   'treat-texture', 'brush-type', 'touch-place', 'hideout',
-  'perch-height', 'greeting'
+  'perch-height', 'greeting', 'scratch-post', 'sound',
+  'play-time', 'window-view', 'bed-shape', 'game-type',
+  'plant-treat', 'water-bowl'
 ];
+const TOTAL = Logic.TOTAL_STAGES;
 
-test('fifty-six actions and sixteen cats cover fourteen individual taste groups', () => {
-  assert.equal(globalThis.MG.ACTIONS.length, 56);
+test('176 actions and sixteen cats cover twenty-two individual taste groups', () => {
+  assert.equal(globalThis.MG.ACTIONS.length, 176);
+  assert.equal(new Set(globalThis.MG.ACTIONS.map(a => a.en)).size, 176);
+  assert.equal(new Set(globalThis.MG.ACTIONS.map(a => a.hint)).size, 176);
   assert.deepEqual([...new Set(globalThis.MG.ACTIONS.map(action => action.group))], GROUPS);
   for (const [index, action] of globalThis.MG.ACTIONS.entries()) {
     assert.deepEqual(Object.keys(action).sort(), ['en', 'group', 'hateEn', 'hint', 'id', 'likeEn', 'prop', 'scene']);
-    assert.equal(action.id, `${action.group}-${(index % 4) + 1}`);
+    assert.ok(/^[a-z-]+-[1-8]$/.test(action.id));
     assert.equal(action.kind, undefined);
     assert.equal(ACTION_BY_ID[action.id], action);
   }
@@ -35,37 +40,40 @@ test('fifty-six actions and sixteen cats cover fourteen individual taste groups'
   assert.equal(new Set(CATS.map(c => c.id)).size, 16);
   assert.equal(new Set(CATS.map(c => c.loves.join('|'))).size, 16, 'each cat must have its own taste profile');
   for (const group of GROUPS) {
-    const favorites = CATS.map(cat => cat.loves.find(id => ACTION_BY_ID[id].group === group));
-    assert.equal(new Set(favorites).size, 4, 'no alternative is universally right or wrong');
+    const favorites = CATS.flatMap(cat => cat.loves.filter(id => ACTION_BY_ID[id].group === group));
+    assert.equal(new Set(favorites).size, 8, 'every alternative is some cat’s favorite');
+    assert.equal(globalThis.MG.ACTIONS.filter(a => a.group === group).length, 8);
   }
   for (const cat of CATS) {
     assert.ok(fs.existsSync(path.join(__dirname, '../assets/cats', cat.id + '.png')));
-    assert.equal(cat.loves.length, 14);
-    assert.equal(cat.hates.length, 42);
-    assert.equal(new Set([...cat.loves, ...cat.hates]).size, 56);
+    assert.equal(cat.loves.length, 44);
+    assert.equal(cat.hates.length, 132);
+    assert.equal(new Set([...cat.loves, ...cat.hates]).size, 176);
     assert.ok(cat.loves.every(id => ACTION_BY_ID[id]));
     assert.ok(cat.hates.every(id => ACTION_BY_ID[id]));
     for (const group of GROUPS) {
       const ids = globalThis.MG.ACTIONS.filter(action => action.group === group).map(action => action.id);
-      assert.equal(cat.loves.filter(id => ids.includes(id)).length, 1);
-      assert.equal(cat.hates.filter(id => ids.includes(id)).length, 3);
+      assert.equal(cat.loves.filter(id => ids.includes(id)).length, 2);
+      assert.equal(cat.hates.filter(id => ids.includes(id)).length, 6);
     }
   }
 });
 
-test('fourteen book groups contain three four-fact reading variants', () => {
-  assert.equal(BOOK.length, 14);
+test('twenty-two book groups hold fact banks with over a thousand passages each', () => {
+  assert.equal(BOOK.length, 22);
+  assert.equal(TOTAL, 20);
   assert.deepEqual(BOOK.map(page => page.group), GROUPS);
   for (let i = 0; i < BOOK.length; i++) {
     assert.equal(Object.hasOwn(BOOK[i], 'stage'), false);
-    assert.ok(Array.isArray(BOOK[i].variants));
-    assert.equal(BOOK[i].variants.length, 3);
-    assert.ok(BOOK[i].variants.every(variant => variant.length === 4));
-    assert.equal(new Set(BOOK[i].variants.map(variant => variant.join(' '))).size, 3);
+    assert.equal(Object.hasOwn(BOOK[i], 'variants'), false);
+    const { intro, detail, tip } = BOOK[i].facts;
+    assert.ok(intro.length >= 5 && detail.length >= 8 && tip.length >= 5, BOOK[i].group);
+    assert.equal(new Set([...intro, ...detail, ...tip]).size, intro.length + detail.length + tip.length, 'no duplicate facts');
+    assert.ok(intro.length * detail.length * (detail.length - 1) * tip.length >= 1000, 'at least 1000 passages per page');
   }
 });
 
-test('each ten-stage run samples ten groups and forty distinct choices', () => {
+test('each twenty-stage run samples twenty groups and eighty distinct choices', () => {
   for (const cat of CATS) {
     let state = Logic.initial(cat);
     state.seed = 0x12345678;
@@ -73,9 +81,11 @@ test('each ten-stage run samples ten groups and forty distinct choices', () => {
     const seenText = new Set();
     const seenGroups = new Set();
     const seenBookIndexes = new Set();
-    for (let stage = 1; stage <= 10; stage++) {
+    for (let stage = 1; stage <= TOTAL; stage++) {
       const round = Logic.round(state);
       assert.equal(round.stage, stage);
+      assert.equal(round.totalStages, TOTAL);
+      assert.equal(round.bodyEn.join(' ').match(/[^.!?]+[.!?]/g)[round.answerIndex].trim(), 'Your cat likes the ' + round.options.find(o => o.loved).hint + '.');
       assert.equal(BOOK[round.bookIndex].group, round.groupId);
       assert.equal(round.page, BOOK[round.bookIndex].page);
       assert.equal(round.titleEn, BOOK[round.bookIndex].titleEn);
@@ -100,7 +110,10 @@ test('each ten-stage run samples ten groups and forty distinct choices', () => {
         seenIds.add(action.id);
         seenText.add(action.en);
       }
-      assert.deepEqual(round.passage, BOOK[round.bookIndex].variants[round.passageIndex]);
+      const bank = BOOK[round.bookIndex].facts;
+      assert.equal(round.passage.length, 4);
+      assert.ok(bank.intro.includes(round.passage[0]) && bank.detail.includes(round.passage[1]) && bank.detail.includes(round.passage[2]) && bank.tip.includes(round.passage[3]));
+      assert.notEqual(round.passage[1], round.passage[2]);
       for (const fact of round.passage) {
         assert.ok(prose.includes(fact.toLowerCase()), 'educational facts remain within the book');
       }
@@ -111,19 +124,19 @@ test('each ten-stage run samples ten groups and forty distinct choices', () => {
       assert.equal(next.lastAnswer.shopAfter, Logic.SHOP_STAGES.includes(stage));
       state = next;
     }
-    assert.equal(seenIds.size, 40);
-    assert.equal(seenText.size, 40);
-    assert.equal(seenGroups.size, 10);
-    assert.equal(seenBookIndexes.size, 10);
+    assert.equal(seenIds.size, 80);
+    assert.equal(seenText.size, 80);
+    assert.equal(seenGroups.size, TOTAL);
+    assert.equal(seenBookIndexes.size, TOTAL);
     assert.equal(state.complete, true);
-    assert.equal(state.correct, 10);
-    assert.equal(state.coins, 36);
+    assert.equal(state.correct, TOTAL);
+    assert.equal(state.coins, 6 + 3 * TOTAL);
     assert.equal(state.lastAnswer.shopAfter, true);
     const finalItem = SHOP[0];
     const finalPurchase = Logic.buy(state, finalItem.id);
     assert.equal(finalPurchase.lastPurchase.accepted, true);
     assert.equal(finalPurchase.complete, true);
-    assert.equal(finalPurchase.stage, 11);
+    assert.equal(finalPurchase.stage, TOTAL + 1);
     assert.ok(finalPurchase.owned.includes(finalItem.id));
     assert.equal(Logic.round(state), null);
     assert.equal(Logic.answer(state, 'bowl-shape-1').lastAnswer.accepted, false);
@@ -139,7 +152,7 @@ test('different run seeds change groups, choices, passages, and reading prose', 
     let changedPassage = false;
     let changedGroups = false;
     const firstSet = [], secondSet = [], firstGroups = [], secondGroups = [];
-    for (let stage = 1; stage <= 10; stage++) {
+    for (let stage = 1; stage <= TOTAL; stage++) {
       const one = Logic.round(first);
       const two = Logic.round(second);
       if (one.options.map(option => option.id).sort().join('|') !==
@@ -154,8 +167,8 @@ test('different run seeds change groups, choices, passages, and reading prose', 
       Object.assign(first, Logic.answer(first, one.correctId));
       Object.assign(second, Logic.answer(second, two.correctId));
     }
-    assert.equal(new Set(firstGroups).size, 10);
-    assert.equal(new Set(secondGroups).size, 10);
+    assert.equal(new Set(firstGroups).size, TOTAL);
+    assert.equal(new Set(secondGroups).size, TOTAL);
     assert.deepEqual(firstGroups.length, secondGroups.length);
     assert.equal(changedGroups, true);
     assert.equal(changedChoices, true);
@@ -165,11 +178,11 @@ test('different run seeds change groups, choices, passages, and reading prose', 
   }
 });
 
-test('a run seed produces the same ten-stage groups, choices, and prose every time', () => {
+test('a run seed produces the same twenty-stage groups, choices, and prose every time', () => {
   for (const cat of CATS) {
     const first = { ...Logic.initial(cat), seed: 0x51f15eed };
     const second = { ...Logic.initial(cat), seed: 0x51f15eed };
-    for (let stage = 1; stage <= 10; stage++) {
+    for (let stage = 1; stage <= TOTAL; stage++) {
       assert.deepEqual(Logic.round(first), Logic.round(second));
       const id = Logic.round(first).correctId;
       const nextFirst = Logic.answer(first, id);
@@ -181,15 +194,18 @@ test('a run seed produces the same ten-stage groups, choices, and prose every ti
   }
 });
 
-test('many fixed seeds vary ten-group sets and all reading variants', () => {
+test('many fixed seeds vary twenty-group sets and rarely repeat a question', () => {
   const coverage = BOOK.map(() => new Set());
   const templates = new Set();
+  const questions = new Map();
+  let rounds = 0;
   for (const cat of CATS) {
     const sampledSets = new Set();
+    const answersPerGroup = new Map();
     for (let sample = 0; sample < 64; sample++) {
       const state = { ...Logic.initial(cat), seed: Math.imul(sample, 0x9e3779b9) >>> 0 };
       const ids = new Set(), texts = new Set();
-      for (let stage = 1; stage <= 10; stage++) {
+      for (let stage = 1; stage <= TOTAL; stage++) {
         const round = Logic.round({ ...state, stage });
         assert.equal(round.options.filter(o => cat.loves.includes(o.id)).length, 1);
         assert.equal(round.options.filter(o => cat.hates.includes(o.id)).length, 3);
@@ -202,13 +218,21 @@ test('many fixed seeds vary ten-group sets and all reading variants', () => {
         }
         coverage[round.bookIndex].add(round.passageIndex);
         templates.add(`${round.bookIndex}:${round.templateIndex}`);
+        const key = cat.id + '|' + round.groupId + '|' + round.passageIndex + '|' + round.options.map(o => o.id).join() + '|' + round.answerIndex;
+        questions.set(key, (questions.get(key) || 0) + 1);
+        rounds++;
+        const answerKey = cat.id + '|' + round.groupId;
+        answersPerGroup.set(answerKey, (answersPerGroup.get(answerKey) || new Set()).add(round.correctId));
       }
-      assert.equal(ids.size, 40);
+      assert.equal(ids.size, 80);
       sampledSets.add([...ids].sort().join('|'));
     }
     assert.ok(sampledSets.size > 1, 'sampled choices should vary by run seed');
+    for (const answers of answersPerGroup.values()) assert.equal(answers.size, 2, 'both favorites appear as answers across plays');
   }
-  coverage.forEach((variants, index) => assert.equal(variants.size, BOOK[index].variants.length));
+  assert.equal(rounds, 16 * 64 * TOTAL);
+  assert.ok(questions.size > rounds * 0.99, 'twenty thousand rounds must almost never repeat a question');
+  coverage.forEach((seen, index) => assert.ok(seen.size >= 40, BOOK[index].group + ' should show dozens of distinct passages across 64 seeds'));
   assert.ok([...templates].some(value => value.endsWith(':0')));
   assert.ok([...templates].some(value => value.endsWith(':1')));
   assert.ok([...templates].some(value => value.endsWith(':2')));
@@ -235,8 +259,8 @@ test('invalid choices do not cost coins or advance stages', () => {
   assert.equal(next.stage, state.stage);
 });
 
-test('losing the final coin on stage ten is game over, not a win', () => {
-  const state = { ...Logic.initial(CATS[0]), stage: 10, coins: 1 };
+test('losing the final coin on the final stage is game over, not a win', () => {
+  const state = { ...Logic.initial(CATS[0]), stage: TOTAL, coins: 1 };
   const round = Logic.round(state);
   const next = Logic.answer(state, round.options.find(o => o.id !== round.correctId).id);
   assert.equal(next.coins, 0);
@@ -244,8 +268,8 @@ test('losing the final coin on stage ten is game over, not a win', () => {
   assert.equal(next.complete, false);
 });
 
-test('stage ten shop allows a purchase before the ending', () => {
-  const state = { ...Logic.initial(CATS[0]), stage: 10, coins: 6 };
+test('final stage shop allows a purchase before the ending', () => {
+  const state = { ...Logic.initial(CATS[0]), stage: TOTAL, coins: 6 };
   const round = Logic.round(state);
   const answered = Logic.answer(state, round.correctId);
   assert.equal(answered.complete, true);
@@ -338,7 +362,7 @@ test('wrong answers name the right action and quote actual evidence with Korean 
   for (const cat of CATS) {
     for (let seed = 1; seed <= 8; seed++) {
       const state = { ...Logic.initial(cat), seed: Math.imul(seed, 0x9e3779b9) >>> 0 };
-      for (let stage = 1; stage <= 10; stage++) {
+      for (let stage = 1; stage <= TOTAL; stage++) {
         const round = Logic.round({ ...state, stage });
         assert.equal(Feedback.explain(round, round.correctId), null);
         assert.equal(Feedback.explain(round, 'not-a-choice'), null);
@@ -357,11 +381,36 @@ test('wrong answers name the right action and quote actual evidence with Korean 
       }
     }
   }
-  assert.equal(covered.size, 56);
+  assert.equal(covered.size, 176);
 });
 
 test('feedback refuses to invent evidence that is not in the current page', () => {
   const round = Logic.round(Logic.initial(CATS[0]));
   const wrong = round.options.find(option => option.id !== round.correctId);
   assert.throws(() => Feedback.explain({ ...round, bodyEn: ['No taste information here.'] }, wrong.id), /actual text/);
+});
+
+test('the answer sentence lands anywhere in the passage, not only at the start', () => {
+  const positions = new Map();
+  for (const cat of CATS) {
+    for (let seed = 1; seed <= 6; seed++) {
+      const state = { ...Logic.initial(cat, 'dad'), seed: Math.imul(seed, 0x9e3779b9) >>> 0 };
+      for (let stage = 1; stage <= TOTAL; stage++) {
+        const round = Logic.round({ ...state, stage });
+        const sentences = round.bodyEn.join(' ').match(/[^.!?]+[.!?]/g).map(s => s.trim());
+        assert.equal(sentences.length, 8);
+        assert.deepEqual(sentences.filter(s => round.passage.includes(s)), round.passage, 'facts keep their order');
+        positions.set(round.answerIndex, (positions.get(round.answerIndex) || 0) + 1);
+      }
+    }
+  }
+  assert.equal(positions.size, 8, 'every sentence slot hosts the answer sometimes');
+  const total = [...positions.values()].reduce((a, b) => a + b, 0);
+  for (const count of positions.values()) assert.ok(count > total / 24, 'no slot is starved');
+});
+
+test('character is stored in the run state and rejected when unknown', () => {
+  assert.equal(Logic.initial(CATS[0], 'suan').character, 'suan');
+  assert.equal(Logic.initial(CATS[0], 'stranger').character, null);
+  assert.equal(Logic.answer(Logic.initial(CATS[0], 'mom'), Logic.round(Logic.initial(CATS[0], 'mom')).correctId).character, 'mom');
 });

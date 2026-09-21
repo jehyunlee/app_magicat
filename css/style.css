@@ -552,6 +552,95 @@ button:focus-visible { outline: 3px solid #74d6c2; outline-offset: 4px; }
   45% { transform: translateY(-32px) scale(.7) rotate(-12deg); }
   65% { transform: translateY(-32px) scale(.65) rotate(12deg); }
 }
+/* ── Family, play scenes, card book, saves, dance ──────────── */
+.mg-top__face { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; object-position: top; background: #fff5e4; border: 2px solid rgba(255, 255, 255, .5); flex: none; }
+.mg-top__face[hidden] { display: none; }
+.mg-pips i { width: 6px; height: 6px; }
+.mg-title__actions { margin-top: 6px; }
+.mg-family { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; max-width: 880px; margin: 0 auto; }
+.mg-family__card {
+  cursor: pointer; border: 1px solid rgba(255, 255, 255, .18); border-radius: var(--radius); padding: 12px 8px 14px;
+  background: linear-gradient(rgba(255, 255, 255, .14), rgba(255, 255, 255, .05)); color: #fff; font-family: var(--ui);
+  display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .16s, background .16s, box-shadow .16s;
+}
+.mg-family__card img { width: 100%; max-width: 170px; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 14px; background: #fff5e4; }
+.mg-family__card strong { font-size: 17px; }
+.mg-family__card small { font-size: 11px; opacity: .72; text-align: center; }
+.mg-family__card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, .2); box-shadow: var(--shadow); }
+.mg-family__card.is-picked { outline: 3px solid var(--gold); background: rgba(247, 197, 68, .22); }
+
+.mg-play {
+  width: min(640px, 100%); padding: 16px; border-radius: var(--radius); text-align: center;
+  background: var(--paper); box-shadow: var(--shadow); border: 3px solid var(--paper-edge);
+  max-height: calc(100dvh - 24px); overflow-y: auto; animation: pop .32s cubic-bezier(.2, 1.3, .4, 1) both;
+}
+.mg-play__title { margin: 0 0 10px; font-size: 24px; color: var(--good); }
+.mg-play__image { display: block; width: 100%; max-height: 52vh; object-fit: contain; border-radius: 14px; background: #f3e6d2; box-shadow: 0 6px 16px rgba(0, 0, 0, .18); }
+.mg-play__line { margin: 12px 0 4px; font-family: var(--en); font-size: 17px; color: #34260f; }
+.mg-play__card { margin: 0 0 14px; font-size: 13px; color: var(--ink-soft); }
+.mg-play__card.is-new { color: #8a5a06; font-weight: 800; }
+
+.mg-cards {
+  width: min(960px, 100%); padding: 16px; border-radius: var(--radius); background: var(--paper);
+  box-shadow: var(--shadow); border: 3px solid var(--paper-edge); max-height: calc(100dvh - 24px); overflow-y: auto;
+}
+.mg-cards__head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.mg-cards__head h2 { margin: 0; font-size: 24px; color: var(--ink); }
+.mg-cards__count { margin: 0; flex: 1; font-size: 13px; color: var(--ink-soft); }
+.mg-cards__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.mg-cards__grid[hidden] { display: none; }
+.mg-cards__card {
+  cursor: pointer; border: 2px solid var(--paper-edge); border-radius: 12px; padding: 6px; background: #fffaf0;
+  font-family: var(--ui); color: #34260f; box-shadow: 0 3px 0 #cbb287; transition: transform .12s;
+}
+.mg-cards__card:hover { transform: translateY(-3px); border-color: var(--violet-2); }
+.mg-cards__card img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; }
+.mg-cards__card span { display: block; margin-top: 5px; font-size: 11px; font-weight: 800; }
+.mg-cardview { display: grid; grid-template-columns: 44px 1fr 44px; gap: 10px; align-items: center; }
+.mg-cardview[hidden] { display: none; }
+.mg-cardview__figure { margin: 0; text-align: center; }
+.mg-cardview__figure img { display: block; width: 100%; max-height: 62vh; object-fit: contain; border-radius: 14px; background: #f3e6d2; box-shadow: 0 8px 20px rgba(0, 0, 0, .2); }
+.mg-cardview__figure figcaption { margin-top: 10px; font-size: 14px; font-weight: 700; color: var(--ink); }
+.mg-cardview__nav { color: var(--ink); border-color: var(--paper-edge); background: #fffaf0; font-size: 26px; }
+.mg-cardview > .mg-btn { grid-column: 1 / -1; justify-self: center; margin-top: 6px; }
+
+.mg-saves {
+  width: min(600px, 100%); padding: 18px; border-radius: var(--radius); background: var(--paper);
+  box-shadow: var(--shadow); border: 3px solid var(--paper-edge); text-align: center;
+}
+.mg-saves h2 { margin: 0 0 6px; font-size: 24px; color: var(--ink); }
+.mg-saves__note { margin: 0 0 14px; font-size: 13px; color: var(--ink-soft); }
+.mg-saves__list { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 10px; }
+.mg-saves__slot { display: grid; grid-template-columns: 58px 1fr auto; gap: 10px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 12px; background: #fffaf0; border: 2px solid var(--paper-edge); }
+.mg-saves__slot.is-empty { opacity: .8; }
+.mg-saves__no { font-weight: 900; color: var(--violet); }
+.mg-saves__label { font-size: 13px; color: #34260f; }
+.mg-saves__actions { display: flex; gap: 6px; }
+.mg-saves__actions .mg-btn { padding: 8px 14px; font-size: 13px; }
+.mg-saves .mg-btn--ghost, .mg-cards .mg-btn--ghost, .mg-play .mg-btn--ghost { color: var(--ink); background: #eee0cb; box-shadow: inset 0 0 0 2px #a78b65; }
+
+.mg-dance { position: relative; width: min(560px, 100%); aspect-ratio: 1 / 1; margin: 0 auto; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: #2a1b4e; }
+.mg-dance__frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; animation: danceFrames 2.4s steps(1, end) infinite; }
+@keyframes danceFrames { 0%, 24.99% { opacity: 1; } 25%, 100% { opacity: 0; } }
+.mg-dance__frame:nth-child(2) { animation-delay: -1.8s; }
+.mg-dance__frame:nth-child(3) { animation-delay: -1.2s; }
+.mg-dance__frame:nth-child(4) { animation-delay: -.6s; }
+.mg-restart { margin-top: 22px; text-align: center; }
+.mg-restart__ask { margin: 0; font-size: 26px; font-weight: 900; color: #fff; }
+
+@media (max-width: 620px) {
+  .mg-top { flex-wrap: wrap; row-gap: 6px; border-radius: 22px; }
+  .mg-top__stage { margin-left: 0; order: 5; flex-basis: 100%; }
+  .mg-top__cat { flex: 1; }
+  .mg-icon-btn { width: 34px; height: 34px; font-size: 15px; }
+  .mg-family { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mg-waiting-cat { width: 118px; bottom: 6px; }
+  .mg-stagewrap { padding-bottom: 130px; }
+  .mg-book { max-height: calc(100dvh - 330px); }
+  .mg-saves__slot { grid-template-columns: 1fr; }
+  .mg-cardview { grid-template-columns: 34px 1fr 34px; }
+}
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  .mg-dance__frame:first-child { opacity: 1; }
 }

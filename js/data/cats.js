@@ -6,11 +6,15 @@
     'bowl-shape', 'bowl-material', 'water-place', 'nap-texture',
     'nap-place', 'toy-motion', 'toy-texture', 'treat-flavor',
     'treat-texture', 'brush-type', 'touch-place', 'hideout',
-    'perch-height', 'greeting'
+    'perch-height', 'greeting', 'scratch-post', 'sound',
+    'play-time', 'window-view', 'bed-shape', 'game-type',
+    'plant-treat', 'water-bowl'
   ];
 
   // Two base-four profile digits give all sixteen story cats distinct tastes.
-  var TASTE_PATTERN = [0, 1, 2, 3, 1, 3, 0, 2, 2, 0, 3, 1, 3, 2];
+  var TASTE_PATTERN = [0, 1, 2, 3, 1, 3, 0, 2, 2, 0, 3, 1, 3, 2, 1, 0, 3, 2, 0, 3, 2, 1];
+  // Each group has eight alternatives (1-4 and 5-8); a cat likes one of each half.
+  var SECOND_PATTERN = [2, 0, 3, 1, 3, 0, 2, 1, 0, 3, 1, 2, 0, 1, 3, 2, 1, 0, 2, 3, 1, 0];
 
   function deriveTaste(profile) {
     var loves = [];
@@ -20,12 +24,11 @@
 
     for (groupIndex = 0; groupIndex < TASTE_GROUPS.length; groupIndex += 1) {
       var shift = groupIndex % 2 === 0 ? profile % 4 : Math.floor(profile / 4);
+      var otherShift = groupIndex % 2 === 0 ? Math.floor(profile / 4) : profile % 4;
       var preferred = (TASTE_PATTERN[groupIndex] + shift) % 4;
-      loves.push(TASTE_GROUPS[groupIndex] + '-' + (preferred + 1));
-      for (option = 0; option < 4; option += 1) {
-        if (option !== preferred) {
-          hates.push(TASTE_GROUPS[groupIndex] + '-' + (option + 1));
-        }
+      var secondPreferred = 4 + (SECOND_PATTERN[groupIndex] + otherShift) % 4;
+      for (option = 0; option < 8; option += 1) {
+        (option === preferred || option === secondPreferred ? loves : hates).push(TASTE_GROUPS[groupIndex] + '-' + (option + 1));
       }
     }
     return { loves: loves, hates: hates };

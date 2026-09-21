@@ -5,8 +5,9 @@
   var START_COINS = 6;
   var RIGHT_REWARD = 3;
   var WRONG_PENALTY = -2;
-  var TOTAL_STAGES = 10;
-  var SHOP_STAGES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  var TOTAL_STAGES = 20;
+  var SHOP_STAGES = [];
+  for (var shopStage = 1; shopStage <= TOTAL_STAGES; shopStage += 1) SHOP_STAGES.push(shopStage);
 
   function listCopy(value) {
     return Array.isArray(value) ? value.slice() : [];
@@ -71,11 +72,19 @@
     return Math.floor(mixed / 4294967296 * length);
   }
 
-  function passagesFor(page) {
-    var variants = page && Array.isArray(page.variants) ? page.variants : [];
-    return variants.map(function (variant) {
-      return listCopy(variant);
-    });
+  /*
+   * One intro, two details and one tip are drawn from the page's fact bank.
+   * passageIndex encodes the four choices so replays can be compared.
+   */
+  function composePassage(page, seed) {
+    var facts = page.facts;
+    var intro = pickIndex(facts.intro.length, seed ^ 0x4f1bbcdc);
+    var details = shuffled(facts.detail.map(function (_, index) { return index; }), seed ^ 0x2545f491).slice(0, 2);
+    var tip = pickIndex(facts.tip.length, seed ^ 0x7f4a7c15);
+    return {
+      passage: [facts.intro[intro], facts.detail[details[0]], facts.detail[details[1]], facts.tip[tip]],
+      passageIndex: ((intro * 100 + details[0]) * 100 + details[1]) * 100 + tip
+    };
   }
 
   function bookEntries() {
@@ -121,7 +130,7 @@
     var optionActions;
     var selectedCount;
     if (entries.length < TOTAL_STAGES) {
-      throw new Error('Book needs at least ten unique groups');
+      throw new Error('Book needs at least ' + TOTAL_STAGES + ' unique groups');
     }
     for (i = 0; i < loves.length; i += 1) loveSet[loves[i]] = true;
     for (i = 0; i < hates.length; i += 1) hateSet[hates[i]] = true;
@@ -137,14 +146,17 @@
       actions = actionsForGroup(entry.groupId);
       loved = actions.filter(function (action) { return !!loveSet[action.id]; });
       hated = actions.filter(function (action) { return !!hateSet[action.id]; });
-      if (actions.length !== 4 || loved.length !== 1 || hated.length !== 3) {
-        throw new Error('Cat needs one loved and three disliked actions in group ' + entry.groupId);
+      if (loved.length < 1 || hated.length < 3) {
+        throw new Error('Cat needs a loved and three disliked actions in group ' + entry.groupId);
       }
-      optionActions = shuffled(actions, stageSeed(seed, i + 1) ^ 0x6d2b79f5);
+      // Each play draws one of the cat's favorites and three of its dislikes.
+      loved = loved[pickIndex(loved.length, stageSeed(seed, i + 1) ^ 0x3c6ef372)];
+      hated = shuffled(hated, stageSeed(seed, i + 1) ^ 0x1b873593).slice(0, 3);
+      optionActions = shuffled([loved].concat(hated), stageSeed(seed, i + 1) ^ 0x6d2b79f5);
       stages.push({
         groupId: entry.groupId,
         bookIndex: entry.bookIndex,
-        loved: loved[0],
+        loved: loved,
         hated: hated,
         actions: optionActions
       });
@@ -164,30 +176,37 @@
     return copy;
   }
 
-  function makeBody(passage, loved, hated, templateIndex) {
+  var PARAGRAPH_SHAPES = [[3, 3, 2], [4, 4], [2, 3, 3]];
+
+  /*
+   * The four facts keep their order; the four taste sentences are dropped into
+   * seeded gaps between them, so the answer can sit anywhere in the passage.
+   * Returns { paragraphs, answerIndex } where answerIndex counts sentences.
+   */
+  function makeBody(passage, loved, hated, templateIndex, seed) {
     var facts = listCopy(passage);
-    var firstHated = hated[0].hint;
-    var secondHated = hated[1].hint;
-    var thirdHated = hated[2].hint;
-    if (templateIndex === 1) {
-      return [
-        facts[0] + ' ' + facts[1] + ' Your cat likes the ' + loved.hint + '.',
-        facts[2] + ' ' + facts[3] + ' Your cat does not like the ' + firstHated +
-          '. It does not like the ' + secondHated + '. It does not like the ' + thirdHated + '.'
-      ];
+    var taste = shuffled([
+      'Your cat likes the ' + loved.hint + '.',
+      'Your cat does not like the ' + hated[0].hint + '.',
+      'It does not like the ' + hated[1].hint + '.',
+      'It does not like the ' + hated[2].hint + '.'
+    ], seed ^ 0x27d4eb2f);
+    var sentences = [];
+    var slots = shuffled([0, 1, 2, 3, 4, 5, 6, 7], seed ^ 0x165667b1).slice(0, 4).sort(function (a, b) { return a - b; });
+    var answerIndex = -1;
+    var paragraphs = [];
+    var shape = PARAGRAPH_SHAPES[templateIndex];
+    var cursor = 0;
+    var i;
+    for (i = 0; i < 8; i += 1) {
+      sentences.push(slots.indexOf(i) !== -1 ? taste[slots.indexOf(i)] : facts[i - slots.filter(function (slot) { return slot < i; }).length]);
     }
-    if (templateIndex === 2) {
-      return [
-        facts[0] + ' Your cat likes the ' + loved.hint + '. ' + facts[1],
-        facts[2] + ' Your cat does not like the ' + firstHated + '. ' + facts[3] +
-          ' It does not like the ' + secondHated + '. It does not like the ' + thirdHated + '.'
-      ];
+    answerIndex = sentences.indexOf(taste.filter(function (sentence) { return sentence.indexOf('Your cat likes the ') === 0; })[0]);
+    for (i = 0; i < shape.length; i += 1) {
+      paragraphs.push(sentences.slice(cursor, cursor + shape[i]).join(' '));
+      cursor += shape[i];
     }
-    return [
-      facts[0] + ' Your cat likes the ' + loved.hint + '. ' + facts[1],
-      facts[2] + ' ' + facts[3] + ' Your cat does not like the ' + firstHated +
-        '. It does not like the ' + secondHated + '. It does not like the ' + thirdHated + '.'
-    ];
+    return { paragraphs: paragraphs, answerIndex: answerIndex };
   }
 
   function cloneState(state) {
@@ -208,10 +227,11 @@
     return next;
   }
 
-  function initial(cat) {
+  function initial(cat, characterId) {
     var chosen = catFor(cat);
     return {
       cat: chosen,
+      character: MG.FAMILY_BY_ID && MG.FAMILY_BY_ID[characterId] ? characterId : null,
       seed: Math.floor(Math.random() * 4294967296),
       stage: 1,
       coins: START_COINS,
@@ -244,12 +264,12 @@
     var hated;
     var schedule;
     var seed;
-    var variants;
-    var passageIndex;
+    var composed;
     var templateIndex;
     var contentSeed;
     var scheduled;
     var options;
+    var body;
     var i;
     if (!cat || !MG.BOOK || stage < 1 || stage > TOTAL_STAGES) return null;
     seed = runSeed(state);
@@ -259,10 +279,9 @@
     page = MG.BOOK[scheduled.bookIndex];
     loved = scheduled.loved;
     hated = scheduled.hated;
-    variants = passagesFor(page);
     contentSeed = stageSeed(seed, stage) ^
       Math.imul(scheduled.bookIndex + 1, 2246822519);
-    passageIndex = pickIndex(variants.length, contentSeed ^ 0x4f1bbcdc);
+    composed = composePassage(page, contentSeed);
     templateIndex = pickIndex(3, contentSeed ^ 0x9e3779b9);
     options = scheduled.actions.map(function (action) {
       return option(action, action.id === loved.id);
@@ -270,15 +289,18 @@
     for (i = 0; i < options.length; i += 1) {
       if (!options[i]) return null;
     }
+    body = makeBody(composed.passage, loved, hated, templateIndex, contentSeed);
     return {
       stage: stage,
+      totalStages: TOTAL_STAGES,
       groupId: scheduled.groupId,
       bookIndex: scheduled.bookIndex,
       page: page.page,
       titleEn: page.titleEn,
-      bodyEn: makeBody(variants[passageIndex], loved, hated, templateIndex),
-      passage: variants[passageIndex].slice(),
-      passageIndex: passageIndex,
+      bodyEn: body.paragraphs,
+      answerIndex: body.answerIndex,
+      passage: composed.passage.slice(),
+      passageIndex: composed.passageIndex,
       templateIndex: templateIndex,
       askEn: page.askEn,
       options: options,

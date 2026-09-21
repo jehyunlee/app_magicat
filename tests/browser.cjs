@@ -16,6 +16,7 @@ const path = require('node:path');
   });
   const errors = [];
   const seenChoices = new Set();
+  let savedSignature = null;
   page.on('pageerror', error => errors.push(error.message));
   page.on('requestfailed', request => errors.push(request.url() + ': ' + request.failure().errorText));
   const url = process.env.MAGICAT_URL || pathToFileURL(path.resolve(__dirname, '../index.html')).href;
@@ -46,9 +47,17 @@ const path = require('node:path');
     assert.equal(/\b(undefined|NaN)\b/.test(text), false, 'removed translation fields must not leak into the UI');
     assert.equal(await page.locator('html').getAttribute('lang'), 'en');
   }
-  async function select(index) {
+  async function select(index, member = 0, fromCharacter = false) {
     seenChoices.clear();
-    await page.locator('#btn-start').click();
+    if (!fromCharacter) await page.locator('#btn-start').click();
+    await page.locator('#screen-character').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('.mg-family__card').count(), 4);
+    assert.equal(await page.locator('#btn-character-confirm').isDisabled(), true);
+    await englishOnly();
+    await page.locator('.mg-family__card').nth(member).click();
+    assert.equal(await page.locator('.mg-family__card.is-picked').count(), 1);
+    await page.locator('#btn-character-confirm').click();
+    await page.locator('#screen-select').waitFor({ state: 'visible' });
     assert.equal(await page.locator('.mg-card').count(), 16);
     await englishOnly();
     await page.locator('.mg-card').nth(index).click();
@@ -107,6 +116,18 @@ const path = require('node:path');
     }
     assert.equal(await page.locator('.mg-opt:disabled').count(), 4);
     await page.locator('#btn-react-next').click();
+    if (correct) {
+      await page.locator('#play-overlay').waitFor({ state: 'visible' });
+      const member = await page.evaluate(() => MG.Game.getCharacter().id);
+      const src = await page.locator('#play-image').getAttribute('src');
+      assert.match(src, new RegExp('^assets/family/play/' + member + '--' + catId + '-[1-4]\\.webp$'));
+      assert.match(await page.locator('#play-card').innerText(), /card/i);
+      await englishOnly();
+      await page.locator('#btn-play-next').click();
+      await page.locator('#play-overlay').waitFor({ state: 'hidden' });
+    } else {
+      assert.equal(await page.locator('#play-overlay').isVisible(), false, 'no play scene after a wrong answer');
+    }
     await englishOnly();
   }
   async function purchaseFirst(shelfIndex, verifyCancel = false) {
@@ -158,7 +179,9 @@ const path = require('node:path');
     await page.waitForFunction(() => getComputedStyle(document.getElementById('screen-stage')).opacity === '1');
     await page.waitForFunction(() => getComputedStyle(document.querySelector('.mg-book')).opacity === '1');
     await page.screenshot({ path: '/tmp/magic-cat-book.png' });
-    for (let stage = 1; stage <= 10; stage++) {
+    const TOTAL = await page.evaluate(() => MG.Logic.TOTAL_STAGES);
+    assert.equal(TOTAL, 20);
+    for (let stage = 1; stage <= TOTAL; stage++) {
       await answer(0, true);
       {
         await page.locator('#screen-shop').waitFor({ state: 'visible' });
@@ -185,19 +208,51 @@ const path = require('node:path');
           assert.equal(await page.evaluate(() => MG.Game.getState().equipped.outfit), 'velvet-cape');
           assert.equal(await page.locator('#purchase-dialog').isVisible(), false);
         }
-        if (stage === 10) await purchaseFirst(0, true);
+        if (stage === TOTAL) await purchaseFirst(0, true);
+        if (stage === 5) {
+          // Save while reading stage 6, keep playing, then load it later from the title.
+          await page.locator('#btn-shop-leave').click();
+          await page.locator('#screen-stage').waitFor({ state: 'visible' });
+          savedSignature = await page.evaluate(() => JSON.stringify({ stage: MG.Game.getState().stage, ids: MG.Logic.round(MG.Game.getState()).options.map(o => o.id), coins: MG.Game.getState().coins, owned: MG.Game.getState().owned }));
+          await page.locator('#btn-save').click();
+          await page.locator('#saves-dialog').waitFor({ state: 'visible' });
+          await englishOnly();
+          await page.locator('[data-save-slot="2"]').click();
+          assert.match(await page.locator('#saves-note').innerText(), /Saved to slot 2/);
+          await page.locator('#btn-saves-close').click();
+          continue;
+        }
         await page.locator('#btn-shop-leave').click();
       }
     }
     await page.locator('#screen-ending').waitFor({ state: 'visible' });
     assert.ok(await page.locator('#ending-stage .cat-clothing').count());
+    assert.equal(await page.locator('#ending-dance .mg-dance__frame').count(), 4);
+    assert.match(await page.locator('#ending-dance .mg-dance__frame').first().getAttribute('src'), /^assets\/family\/dance\/dad--korean-shorthair-1\.webp$/);
+    assert.match(await page.locator('.mg-restart__ask').innerText(), /Restart\?/);
     await page.waitForFunction(() => getComputedStyle(document.getElementById('screen-ending')).opacity === '1');
     await page.screenshot({ path: '/tmp/magic-cat-ending.png' });
-    await page.locator('#btn-end-again').click();
-    if (await page.locator('#screen-select').isVisible()) {
-      await page.goto(url);
-    }
-    await select(0);
+    // Card book: every cleared stage added a card shared across saves.
+    await page.locator('#btn-cards').click();
+    await page.locator('#cards-overlay').waitFor({ state: 'visible' });
+    const cardCount = await page.locator('.mg-cards__card').count();
+    assert.equal(cardCount, 4, 'twenty clears with four scenes collect all four cards for the pair');
+    await page.locator('.mg-cards__card').nth(1).click();
+    assert.equal(await page.locator('#card-view').isVisible(), true);
+    assert.match(await page.locator('#card-view-caption').innerText(), /^2 \/ 4/);
+    await page.locator('#btn-card-next').click();
+    assert.match(await page.locator('#card-view-caption').innerText(), /^3 \/ 4/);
+    await page.locator('#btn-card-prev').click();
+    await page.locator('#btn-card-prev').click();
+    assert.match(await page.locator('#card-view-caption').innerText(), /^1 \/ 4/);
+    await page.screenshot({ path: '/tmp/magic-cat-card-view.png' });
+    await englishOnly();
+    await page.keyboard.press('Escape');
+    await page.locator('#cards-overlay').waitFor({ state: 'hidden' });
+    await page.locator('#btn-end-restart').click();
+    await page.locator('#screen-character').waitFor({ state: 'visible' });
+    assert.equal(await page.evaluate(() => MG.Game.getState()), null);
+    await select(0, 0, true);
     const secondRun = await replaySignature();
     assert.notEqual(secondRun.seed, firstRun.seed);
     assert.notDeepEqual(secondRun.choices, firstRun.choices, 'replay must change choice membership, not only ordering');
@@ -220,12 +275,23 @@ const path = require('node:path');
     assert.notEqual(retriedRun.seed, secondRun.seed);
     assert.notDeepEqual(retriedRun.choices, secondRun.choices);
     assert.notDeepEqual(retriedRun.passages, secondRun.passages);
-    // Verify both remaining ending personalities with purchased treats.
+    // Load the slot saved at stage 6 and continue exactly there.
+    await page.goto(url);
+    await page.locator('#btn-load').click();
+    await page.locator('[data-load-slot="2"]').click();
+    await page.locator('#screen-stage').waitFor({ state: 'visible' });
+    assert.equal(await page.evaluate(() => JSON.stringify({ stage: MG.Game.getState().stage, ids: MG.Logic.round(MG.Game.getState()).options.map(o => o.id), coins: MG.Game.getState().coins, owned: MG.Game.getState().owned })), savedSignature);
+    assert.equal(await page.evaluate(() => MG.Game.getCharacter().id), 'dad');
+    assert.equal(await page.locator('#btn-cards').isVisible(), true);
+    await page.locator('#btn-cards').click();
+    assert.equal(await page.locator('.mg-cards__card').count(), cardCount, 'the loaded save shares the same card book');
+    await page.locator('#btn-cards-close').click();
+    // Verify both remaining ending personalities with purchased treats, using other family members.
     const indexes = await page.evaluate(() => ['playful', 'dizzy'].map(p => MG.CATS.findIndex(c => c.personality === p)));
-    for (const index of indexes) {
+    for (const [member, index] of indexes.entries()) {
       await page.goto(url);
-      await select(index);
-      for (let stage = 1; stage <= 10; stage++) {
+      await select(index, member + 1);
+      for (let stage = 1; stage <= TOTAL; stage++) {
         await answer(index, true);
         await page.locator('#screen-shop').waitFor({ state: 'visible' });
         if (stage === 3) await purchaseFirst(0);
@@ -238,6 +304,8 @@ const path = require('node:path');
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(url);
     await page.locator('#btn-start').click();
+    await page.locator('.mg-family__card').nth(3).click();
+    await page.locator('#btn-character-confirm').click();
     const layout = await page.locator('#cat-grid').evaluate(el => ({
       columns: getComputedStyle(el).gridTemplateColumns.split(' ').length,
       overflow: document.documentElement.scrollWidth > innerWidth
@@ -247,8 +315,8 @@ const path = require('node:path');
     await page.waitForFunction(() => getComputedStyle(document.getElementById('screen-select')).opacity === '1');
     await page.screenshot({ path: '/tmp/magic-cat-selection-mobile.png', fullPage: true });
     await page.goto(url);
-    await select(0);
-    for (let stage = 1; stage <= 10; stage++) {
+    await select(0, 3);
+    for (let stage = 1; stage <= TOTAL; stage++) {
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       await answer(0, true);
       await page.locator('#screen-shop').waitFor({ state: 'visible' });
@@ -258,7 +326,7 @@ const path = require('node:path');
     await page.locator('#screen-ending').waitFor({ state: 'visible' });
     await englishOnly();
     assert.deepEqual(errors, []);
-    console.log('PASS: 40-stage playthrough, shops, equipment, endings, game over, retry, mobile 4x4 and gameplay, English-only text and labels, no JS errors.');
+    console.log('PASS: character pick, 80 stages, play scenes and cards, save/load, dance ending and restart, shops, game over, mobile, English-only UI, no JS errors.');
   } finally {
     await browser.close();
   }
