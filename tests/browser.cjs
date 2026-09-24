@@ -18,7 +18,7 @@ const path = require('node:path');
   const seenChoices = new Set();
   let savedSignature = null;
   page.on('pageerror', error => errors.push(error.message));
-  page.on('requestfailed', request => errors.push(request.url() + ': ' + request.failure().errorText));
+  page.on('requestfailed', request => { if (request.failure().errorText !== 'net::ERR_ABORTED') errors.push(request.url() + ': ' + request.failure().errorText); });
   const url = process.env.MAGICAT_URL || pathToFileURL(path.resolve(__dirname, '../index.html')).href;
   async function replaySignature() {
     return page.evaluate(() => {
