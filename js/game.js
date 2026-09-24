@@ -453,14 +453,15 @@
   /* A cleared stage earns a Nano Banana play scene and a card in the shared book. */
   function showPlayScene(outcome) {
     var cat = currentCat();
-    var scene = (gameState.seed % MG.SCENES_PER_PAIR + outcome.stage) % MG.SCENES_PER_PAIR;
+    var scene = MG.Store.drawScene(selectedCharacter.id, cat.id);
     var earned = MG.Store.addCard(selectedCharacter.id, cat.id, scene, outcome.stage);
     dom.playTitle.textContent = 'Stage ' + outcome.stage + ' clear!';
     dom.playImage.src = MG.playScene(selectedCharacter.id, cat.id, scene);
     dom.playImage.alt = selectedCharacter.en + ' plays with ' + cat.en;
     dom.playLine.textContent = selectedCharacter.en + ' and ' + cat.en + ' play together.';
-    dom.playCard.textContent = earned.fresh ? 'New card! Your Card Book has ' + earned.total + (earned.total === 1 ? ' card.' : ' cards.') :
-      'You have this card again (' + earned.card.count + ' times). Card Book: ' + earned.total + ' cards.';
+    var pairCards = MG.Store.listCards(selectedCharacter.id).filter(function (card) { return card.cat === cat.id; }).length;
+    dom.playCard.textContent = earned.fresh ? 'New card ' + pairCards + ' of ' + MG.SCENES_PER_PAIR + ' with ' + cat.en + '! Your Card Book has ' + earned.total + (earned.total === 1 ? ' card.' : ' cards.') :
+      'You already own every ' + cat.en + ' card, so this one is a repeat (' + earned.card.count + ' times).';
     dom.playCard.className = 'mg-play__card' + (earned.fresh ? ' is-new' : '');
     dom.btnPlayNext.textContent = outcome.shopAfter ? 'Open Item Shop' : (outcome.complete ? 'See Ending' : 'Next Page');
     dom.playOverlay.hidden = false;

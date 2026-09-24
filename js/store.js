@@ -82,8 +82,29 @@
     }) : [];
   }
 
+  /*
+   * Pick a scene the player has not collected for this cat yet, at random.
+   * Only once every scene is owned does a repeat become possible, and then
+   * the least-seen scene is chosen.
+   */
+  function drawScene(character, cat, random) {
+    var owned = {};
+    listCards(character).forEach(function (card) {
+      if (card.cat === cat) owned[card.scene] = card.count;
+    });
+    var unseen = [];
+    for (var scene = 0; scene < MG.SCENES_PER_PAIR; scene += 1) {
+      if (!owned[scene]) unseen.push(scene);
+    }
+    if (unseen.length) return unseen[Math.floor((random || Math.random)() * unseen.length)];
+    var fewest = Math.min.apply(null, Object.keys(owned).map(function (key) { return owned[key]; }));
+    var rarest = Object.keys(owned).filter(function (key) { return owned[key] === fewest; }).map(Number);
+    return rarest[Math.floor((random || Math.random)() * rarest.length)];
+  }
+
   function addCard(character, cat, scene, stage) {
     if (!MG.FAMILY_BY_ID[character]) throw new Error('Cards belong to a family member');
+    if (!(scene >= 0 && scene < MG.SCENES_PER_PAIR)) throw new Error('Unknown scene');
     var cards = listCards(character);
     var existing = cards.filter(function (card) {
       return card.cat === cat && card.scene === scene;
@@ -99,5 +120,5 @@
     return { fresh: fresh, card: existing || cards[cards.length - 1], total: cards.length };
   }
 
-  MG.Store = { saveGame: saveGame, loadGame: loadGame, deleteGame: deleteGame, listGames: listGames, listCards: listCards, addCard: addCard, SLOTS: SLOTS, backend: null };
+  MG.Store = { saveGame: saveGame, loadGame: loadGame, deleteGame: deleteGame, listGames: listGames, listCards: listCards, drawScene: drawScene, addCard: addCard, SLOTS: SLOTS, backend: null };
 })(globalThis);

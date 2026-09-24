@@ -12,8 +12,8 @@
   MG.FAMILY_BY_ID = {};
   MG.FAMILY.forEach(function (member) { MG.FAMILY_BY_ID[member.id] = member; });
 
-  // Nano Banana renders four play scenes and four dance frames for every pair.
-  MG.SCENES_PER_PAIR = 4;
+  // Nano Banana renders 24 play scenes and four dance frames for every pair.
+  MG.SCENES_PER_PAIR = 24;
   MG.DANCE_FRAMES = 4;
   MG.playScene = function (characterId, catId, sceneIndex) {
     return 'assets/family/play/' + characterId + '--' + catId + '-' + (sceneIndex + 1) + '.webp';

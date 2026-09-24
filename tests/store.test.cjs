@@ -61,7 +61,33 @@ test('each player owns a card book that other players cannot see', () => {
   Store.saveGame(3, Logic.initial(CATS[7], 'suan'), 'stage');
   for (const slot of [1, 2]) assert.equal(Store.listCards(Store.loadGame(slot).state.character).length, 1);
   assert.equal(Store.listCards(Store.loadGame(3).state.character)[0].cat, 'bengal');
-  Store.backend.setItem('magicat.cards.mom', JSON.stringify([{ character: 'dad', cat: 'persian', scene: 0 }, { character: 'mom', cat: 'sphynx', scene: 9 }]));
+  Store.backend.setItem('magicat.cards.mom', JSON.stringify([{ character: 'dad', cat: 'persian', scene: 0 }, { character: 'mom', cat: 'sphynx', scene: 99 }]));
   assert.deepEqual(Store.listCards('mom'), [], 'cards filed under the wrong player or invalid scenes are ignored');
   assert.equal(FAMILY.length, 4);
+});
+
+test('each clear draws a random card the player does not own yet, with no repeats until the set is complete', () => {
+  Store.backend = memory();
+  const { SCENES_PER_PAIR } = globalThis.MG;
+  assert.equal(SCENES_PER_PAIR, 24);
+  let seed = 7;
+  const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+  const drawn = [];
+  for (let i = 0; i < SCENES_PER_PAIR; i++) {
+    const scene = Store.drawScene('mom', 'ragdoll', random);
+    assert.equal(drawn.includes(scene), false, 'no repeat before all 24 are owned');
+    drawn.push(scene);
+    assert.equal(Store.addCard('mom', 'ragdoll', scene, i + 1).fresh, true);
+  }
+  assert.equal(new Set(drawn).size, SCENES_PER_PAIR);
+  assert.notDeepEqual(drawn, [...drawn].sort((a, b) => a - b), 'draws are random, not sequential');
+  // A 20-stage run never repeats: 20 < 24 unique scenes.
+  const repeat = Store.drawScene('mom', 'ragdoll', random);
+  assert.equal(Store.addCard('mom', 'ragdoll', repeat, 25).fresh, false);
+  const second = Store.drawScene('mom', 'ragdoll', random);
+  assert.notEqual(second, repeat, 'after the set is complete, the least-seen card comes first');
+  // Other cats and other players are untouched.
+  assert.equal(Store.listCards('mom').filter(card => card.cat === 'persian').length, 0);
+  assert.deepEqual(Store.listCards('dad'), []);
+  assert.throws(() => Store.addCard('mom', 'ragdoll', 24, 1), /Unknown scene/);
 });

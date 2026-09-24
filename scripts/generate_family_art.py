@@ -42,12 +42,46 @@ CATS = {
     'devon-rex': 'curly cream Devon Rex with very big ears and an orange jester hat',
     'american-shorthair': 'silver black-striped American Shorthair with a purple moon wizard hat',
 }
-PLAY_PANELS = [
-    'waves a feather wand toy while the cat leaps to catch it',
-    'sits reading a thick purple magic book with the cat curled on the lap',
-    'kneels and offers a small bowl of cat treats while the cat sniffs happily',
-    'plays peekaboo with the cat poking out of a cardboard box',
+# Six sheets of four panels: 24 distinct play scenes per character/cat pair.
+PLAY_SHEETS = [
+    ('warm cozy living-room scenes', [
+        'waves a feather wand toy while the cat leaps to catch it',
+        'sits reading a thick purple magic book with the cat curled on the lap',
+        'kneels and offers a small bowl of cat treats while the cat sniffs happily',
+        'plays peekaboo with the cat poking out of a cardboard box',
+    ]),
+    ('sunny kitchen and dining scenes', [
+        'pours fresh water into a bowl while the cat waits with its tail up',
+        'bakes fish-shaped cookies while the cat watches from the counter',
+        'sits at breakfast while the cat naps in a sunbeam on the table edge',
+        'washes a food bowl at the sink while the cat rubs against the legs',
+    ]),
+    ('backyard garden scenes on a bright spring day', [
+        'blows soap bubbles while the cat jumps to pop them',
+        'waters flowers with a watering can while the cat sniffs a tulip',
+        'lies on the grass while the cat sits on the chest, nose to nose',
+        'holds a butterfly net while the cat chases a yellow butterfly',
+    ]),
+    ('bedroom scenes at bedtime with a soft lamp', [
+        'brushes the cat with a soft brush on a bed',
+        'reads a bedtime story under a blanket with the cat tucked beside',
+        'yawns in pajamas while the cat stretches on a pillow',
+        'shines a small flashlight while the cat pounces on the light dot',
+    ]),
+    ('rainy-day scenes by a big window', [
+        'builds a blanket fort while the cat peeks out from inside',
+        'draws the cat with crayons while the cat poses proudly',
+        'dangles a string of yarn while the cat tangles itself up',
+        'watches raindrops on the window with the cat sitting on the sill',
+    ]),
+    ('snowy winter scenes with scarves and warm light', [
+        'builds a small snow cat outside while the real cat watches from the doorway',
+        'sips hot cocoa by a fireplace while the cat warms its paws',
+        'wraps the cat gently in a knitted scarf',
+        'decorates a small tree with ornaments while the cat bats at a bauble',
+    ]),
 ]
+PLAY_PANELS = PLAY_SHEETS[0][1]
 DANCE_FRAMES = [
     'both raise one arm and one paw high, starting the dance',
     'both spin with a twirl, coats and tail swishing',
@@ -100,15 +134,15 @@ def character(member):
     return 'Saved ' + target.name
 
 
-def sheet(kind, member, cat):
+def sheet(kind, member, cat, sheet_index=0):
     folder = ROOT / 'assets/family' / kind
-    targets = [folder / '{}--{}-{}.webp'.format(member, cat, index + 1) for index in range(4)]
+    first = sheet_index * 4
+    targets = [folder / '{}--{}-{}.webp'.format(member, cat, first + index + 1) for index in range(4)]
     if all(target.exists() for target in targets):
-        return 'Reused {} {} {}'.format(kind, member, cat)
+        return 'Reused {} {} {} #{}'.format(kind, member, cat, sheet_index + 1)
     who = FAMILY[member].split(':')[0]
     if kind == 'play':
-        panels = PLAY_PANELS
-        setting = 'warm cozy living-room scenes'
+        setting, panels = PLAY_SHEETS[sheet_index]
         lead = 'Each panel is a complete, separate scene of the SAME {} and the SAME cat playing together.'.format(who)
     else:
         panels = DANCE_FRAMES
@@ -127,14 +161,15 @@ def sheet(kind, member, cat):
         panel = image.crop((box[0] + gutter, box[1] + gutter, box[2] - gutter, box[3] - gutter))
         panel.thumbnail((720, 720), Image.Resampling.LANCZOS)
         panel.save(target, 'WEBP', quality=86, method=6)
-    return 'Saved {} {} {}'.format(kind, member, cat)
+    return 'Saved {} {} {} #{}'.format(kind, member, cat, sheet_index + 1)
 
 
 def main():
     (ROOT / 'assets/family').mkdir(parents=True, exist_ok=True)
     for member in FAMILY:
         print(character(member), flush=True)
-    jobs = [(kind, member, cat) for kind in ('play', 'dance') for member in FAMILY for cat in CATS]
+    jobs = [('play', member, cat, index) for index in range(len(PLAY_SHEETS)) for member in FAMILY for cat in CATS]
+    jobs += [('dance', member, cat, 0) for member in FAMILY for cat in CATS]
     failures = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         futures = {pool.submit(sheet, *job): job for job in jobs}
