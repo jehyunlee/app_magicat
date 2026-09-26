@@ -60,3 +60,24 @@ test('every shop item has an illustrated catalog thumbnail', () => {
     assert.ok(fs.existsSync(path.join(__dirname, '../assets/items', item.id + '.png')));
   }
 });
+
+test('every player has a portrait, 24 play scenes and 4 dance frames with every cat', () => {
+  require('../js/data/family.js');
+  const { FAMILY, SCENES_PER_PAIR, DANCE_FRAMES, playScene, danceFrame } = globalThis.MG;
+  assert.equal(FAMILY.length, 6);
+  let files = 0;
+  for (const member of FAMILY) {
+    assert.ok(fs.statSync(path.join(__dirname, '../assets/family', member.id + '.png')).size > 10000, member.id);
+    for (const cat of CATS) {
+      for (let scene = 0; scene < SCENES_PER_PAIR; scene++) {
+        assert.ok(fs.existsSync(path.join(__dirname, '..', playScene(member.id, cat.id, scene))), playScene(member.id, cat.id, scene));
+        files++;
+      }
+      for (let frame = 0; frame < DANCE_FRAMES; frame++) {
+        assert.ok(fs.existsSync(path.join(__dirname, '..', danceFrame(member.id, cat.id, frame))), danceFrame(member.id, cat.id, frame));
+        files++;
+      }
+    }
+  }
+  assert.equal(files, 6 * 16 * 28);
+});

@@ -495,6 +495,7 @@ body {
 
 /* ── 반응형 ────────────────────────────────────────────── */
 @media (max-width: 860px) {
+  .mg-family { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .mg-book { grid-template-columns: 1fr; }
   .mg-book__spine { height: 14px; background: linear-gradient(#a98b5d, #d9c49b); }
   .mg-book__page { min-height: 0; }
@@ -557,7 +558,7 @@ button:focus-visible { outline: 3px solid #74d6c2; outline-offset: 4px; }
 .mg-top__face[hidden] { display: none; }
 .mg-pips i { width: 6px; height: 6px; }
 .mg-title__actions { margin-top: 6px; }
-.mg-family { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; max-width: 880px; margin: 0 auto; }
+.mg-family { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; max-width: 1080px; margin: 0 auto; }
 .mg-family__card {
   cursor: pointer; border: 1px solid rgba(255, 255, 255, .18); border-radius: var(--radius); padding: 12px 8px 14px;
   background: linear-gradient(rgba(255, 255, 255, .14), rgba(255, 255, 255, .05)); color: #fff; font-family: var(--ui);
@@ -634,7 +635,10 @@ button:focus-visible { outline: 3px solid #74d6c2; outline-offset: 4px; }
   .mg-top__stage { margin-left: 0; order: 5; flex-basis: 100%; }
   .mg-top__cat { flex: 1; }
   .mg-icon-btn { width: 34px; height: 34px; font-size: 15px; }
-  .mg-family { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mg-family { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .mg-family__card { padding: 8px 4px 10px; }
+  .mg-family__card strong { font-size: 14px; }
+  .mg-family__card small { font-size: 10px; }
   .mg-waiting-cat { width: 118px; bottom: 6px; }
   .mg-stagewrap { padding-bottom: 130px; }
   .mg-book { max-height: calc(100dvh - 330px); }

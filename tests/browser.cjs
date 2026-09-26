@@ -51,7 +51,7 @@ const path = require('node:path');
     seenChoices.clear();
     if (!fromCharacter) await page.locator('#btn-start').click();
     await page.locator('#screen-character').waitFor({ state: 'visible' });
-    assert.equal(await page.locator('.mg-family__card').count(), 4);
+    assert.equal(await page.locator('.mg-family__card').count(), 6);
     assert.equal(await page.locator('#btn-character-confirm').isDisabled(), true);
     await englishOnly();
     await page.locator('.mg-family__card').nth(member).click();
@@ -313,7 +313,7 @@ const path = require('node:path');
     // From the title, pick whose book to open; Dad's book is untouched by Suan's play.
     await page.goto(url);
     await page.locator('#btn-title-cards').click();
-    assert.equal(await page.locator('.mg-cards__owner').count(), 4);
+    assert.equal(await page.locator('.mg-cards__owner').count(), 6);
     await page.locator('[data-card-owner="dad"]').click();
     assert.equal(await page.locator('.mg-cards__card').count(), cardCount);
     await page.keyboard.press('Escape');

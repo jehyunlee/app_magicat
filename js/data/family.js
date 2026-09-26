@@ -7,7 +7,9 @@
     { id: 'dad', en: 'Dad', tagline: 'Square glasses and a warm smile' },
     { id: 'mom', en: 'Mom', tagline: 'Round glasses and gentle hands' },
     { id: 'jeongan', en: 'Jeongan', tagline: 'Round glasses and a big grin' },
-    { id: 'suan', en: 'Suan', tagline: 'Long hair and a happy laugh' }
+    { id: 'suan', en: 'Suan', tagline: 'Long hair and a happy laugh' },
+    { id: 'hunho', en: 'Hunho', tagline: 'Antler headband and a cool smile' },
+    { id: 'yewon', en: 'Yewon', tagline: 'Side ponytail and round glasses' }
   ];
   MG.FAMILY_BY_ID = {};
   MG.FAMILY.forEach(function (member) { MG.FAMILY_BY_ID[member.id] = member; });

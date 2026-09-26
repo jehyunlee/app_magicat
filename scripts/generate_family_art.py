@@ -23,6 +23,8 @@ FAMILY = {
     'mom': 'Mom: a grown woman with shoulder-length brown hair, round glasses and a gentle smile, wearing a sage green cardigan over a cream dress',
     'jeongan': 'Jeongan: a young child with a short chin-length brown bob, round glasses and a cheerful smile, wearing a sky blue hoodie and yellow shorts',
     'suan': 'Suan: a small, slim young child (the youngest and shortest in the family, a little shorter than her sibling Jeongan) of normal build with a slender, gently oval face, long brown hair past the shoulders, a happy closed-eye smile and NO glasses at all, wearing a coral pink sweater and denim overalls',
+    'hunho': 'Hunho: a slim teenage boy, taller than the young children but shorter than Dad, with tousled dark brown hair falling over his forehead, a brown reindeer-antler headband on his head, small dark eyes, a slight closed-mouth smile and NO glasses, wearing a warm gray-brown t-shirt and dark jeans',
+    'yewon': 'Yewon: a slim teenage girl, taller than the young children but shorter than Mom, with straight black hair in a low side ponytail over one shoulder and long side-swept bangs, round black-rimmed glasses, a calm cool deadpan expression with a small straight mouth, wearing a plain white t-shirt and a long navy skirt',
 }
 CATS = {
     'korean-shorthair': 'orange tabby cat with a purple star wizard hat',
@@ -128,6 +130,9 @@ def character(member):
     if member == 'suan':
         parts.append(inline(ROOT / 'assets/family/jeongan.png'))
         prompt += ' Image 3 shows her sibling Jeongan at full height in the same canvas; draw Suan using the SAME canvas framing so that she stands slightly SHORTER than Jeongan, with a child-sized body and generous empty space above her head.'
+    if member in ('hunho', 'yewon'):
+        parts.append(inline(ROOT / 'assets/family/dad.png'))
+        prompt += ' Image 3 shows an adult (Dad) at full height in the same canvas; draw this teenager using the SAME canvas framing so that the top of the head is clearly LOWER than Dad\'s (about 90 percent of his height), with a teenage body and visible empty space above the head. Keep the calm expression from image 1; do not turn it into a big grin.'
     image = generate(parts + [{'text': prompt}], '3:4', '1K')
     image.thumbnail((768, 1024), Image.Resampling.LANCZOS)
     image.save(target, optimize=True)

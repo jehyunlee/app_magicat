@@ -63,7 +63,8 @@ test('each player owns a card book that other players cannot see', () => {
   assert.equal(Store.listCards(Store.loadGame(3).state.character)[0].cat, 'bengal');
   Store.backend.setItem('magicat.cards.mom', JSON.stringify([{ character: 'dad', cat: 'persian', scene: 0 }, { character: 'mom', cat: 'sphynx', scene: 99 }]));
   assert.deepEqual(Store.listCards('mom'), [], 'cards filed under the wrong player or invalid scenes are ignored');
-  assert.equal(FAMILY.length, 4);
+  assert.equal(FAMILY.length, 6);
+  assert.deepEqual(FAMILY.map(member => member.id), ['dad', 'mom', 'jeongan', 'suan', 'hunho', 'yewon']);
 });
 
 test('each clear draws a random card the player does not own yet, with no repeats until the set is complete', () => {
