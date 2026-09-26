@@ -199,7 +199,8 @@
       var picked = selectedCharacter && selectedCharacter.id === member.id;
       return '<button class="mg-family__card' + (picked ? ' is-picked' : '') + '" type="button" data-character-id="' + member.id +
         '" aria-pressed="' + (picked ? 'true' : 'false') + '" aria-label="Choose ' + escapeHtml(member.en) + '">' +
-        '<img src="assets/family/' + member.id + '.png" alt=""><strong>' + escapeHtml(member.en) + '</strong><small>' + escapeHtml(member.tagline) + '</small></button>';
+        '<img src="assets/family/' + member.id + '.png" alt=""><strong>' + escapeHtml(member.en) + '</strong><small>' + escapeHtml(member.tagline) + '</small>' +
+        '<span class="mg-family__level mg-family__level--' + member.level + '">' + escapeHtml(member.levelEn) + '</span></button>';
     }).join('');
     Array.prototype.forEach.call(dom.characterGrid.querySelectorAll('[data-character-id]'), function (button) {
       button.addEventListener('click', function () {

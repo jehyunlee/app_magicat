@@ -2,15 +2,21 @@
   'use strict';
   var MG = root.MG = root.MG || {};
 
-  // Reference drawing order: top-left, then clockwise.
+  /*
+   * Reading level decides how the cat's tastes are worded in the book.
+   *   basic     - stated directly ("Your cat likes the X.")
+   *   inference - one reasoning step (behaviour described, taste implied)
+   *   advanced  - Korean CSAT-style English: longer clauses, academic vocabulary
+   */
   MG.FAMILY = [
-    { id: 'dad', en: 'Dad', tagline: 'Square glasses and a warm smile' },
-    { id: 'mom', en: 'Mom', tagline: 'Round glasses and gentle hands' },
-    { id: 'jeongan', en: 'Jeongan', tagline: 'Round glasses and a big grin' },
-    { id: 'suan', en: 'Suan', tagline: 'Long hair and a happy laugh' },
-    { id: 'hunho', en: 'Hunho', tagline: 'Antler headband and a cool smile' },
-    { id: 'yewon', en: 'Yewon', tagline: 'Side ponytail and round glasses' }
+    { id: 'dad', en: 'Dad', tagline: 'Square glasses and a warm smile', level: 'basic', levelEn: 'Easy reading' },
+    { id: 'mom', en: 'Mom', tagline: 'Round glasses and gentle hands', level: 'basic', levelEn: 'Easy reading' },
+    { id: 'jeongan', en: 'Jeongan', tagline: 'Round glasses and a big grin', level: 'basic', levelEn: 'Easy reading' },
+    { id: 'suan', en: 'Suan', tagline: 'Long hair and a happy laugh', level: 'basic', levelEn: 'Easy reading' },
+    { id: 'hunho', en: 'Hunho', tagline: 'Antler headband and a cool smile', level: 'advanced', levelEn: 'Advanced reading' },
+    { id: 'yewon', en: 'Yewon', tagline: 'Side ponytail and round glasses', level: 'inference', levelEn: 'Think one step' }
   ];
+  MG.READING_LEVELS = ['basic', 'inference', 'advanced'];
   MG.FAMILY_BY_ID = {};
   MG.FAMILY.forEach(function (member) { MG.FAMILY_BY_ID[member.id] = member; });
 

@@ -76,8 +76,19 @@
    * One intro, two details and one tip are drawn from the page's fact bank.
    * passageIndex encodes the four choices so replays can be compared.
    */
-  function composePassage(page, seed) {
-    var facts = page.facts;
+  function readingLevel(state) {
+    var member = MG.FAMILY_BY_ID && MG.FAMILY_BY_ID[state && state.character];
+    return member && MG.LEVELS && MG.LEVELS[member.level] ? member.level : 'basic';
+  }
+
+  /* Advanced readers get the CSAT-register fact bank for the same page. */
+  function factBank(page, level) {
+    var advanced = level === 'advanced' && MG.BOOK_ADVANCED && MG.BOOK_ADVANCED[page.group];
+    return advanced || page.facts;
+  }
+
+  function composePassage(page, seed, level) {
+    var facts = factBank(page, level);
     var intro = pickIndex(facts.intro.length, seed ^ 0x4f1bbcdc);
     var details = shuffled(facts.detail.map(function (_, index) { return index; }), seed ^ 0x2545f491).slice(0, 2);
     var tip = pickIndex(facts.tip.length, seed ^ 0x7f4a7c15);
@@ -183,13 +194,17 @@
    * seeded gaps between them, so the answer can sit anywhere in the passage.
    * Returns { paragraphs, answerIndex } where answerIndex counts sentences.
    */
-  function makeBody(passage, loved, hated, templateIndex, seed) {
+  function makeBody(passage, loved, hated, templateIndex, seed, level) {
     var facts = listCopy(passage);
+    var bank = MG.LEVELS[level] || MG.LEVELS.basic;
+    var likedIndex = pickIndex(bank.liked.length, seed ^ 0x3c6ef372);
+    var dislikeOrder = shuffled(bank.disliked.map(function (_, index) { return index; }), seed ^ 0x1b873593);
+    var likedSentence = MG.tasteSentence(level, true, loved.hint, likedIndex);
     var taste = shuffled([
-      'Your cat likes the ' + loved.hint + '.',
-      'Your cat does not like the ' + hated[0].hint + '.',
-      'It does not like the ' + hated[1].hint + '.',
-      'It does not like the ' + hated[2].hint + '.'
+      likedSentence,
+      MG.tasteSentence(level, false, hated[0].hint, dislikeOrder[0]),
+      MG.tasteSentence(level, false, hated[1].hint, dislikeOrder[1]),
+      MG.tasteSentence(level, false, hated[2].hint, dislikeOrder[2])
     ], seed ^ 0x27d4eb2f);
     var sentences = [];
     var slots = shuffled([0, 1, 2, 3, 4, 5, 6, 7], seed ^ 0x165667b1).slice(0, 4).sort(function (a, b) { return a - b; });
@@ -201,7 +216,7 @@
     for (i = 0; i < 8; i += 1) {
       sentences.push(slots.indexOf(i) !== -1 ? taste[slots.indexOf(i)] : facts[i - slots.filter(function (slot) { return slot < i; }).length]);
     }
-    answerIndex = sentences.indexOf(taste.filter(function (sentence) { return sentence.indexOf('Your cat likes the ') === 0; })[0]);
+    answerIndex = sentences.indexOf(likedSentence);
     for (i = 0; i < shape.length; i += 1) {
       paragraphs.push(sentences.slice(cursor, cursor + shape[i]).join(' '));
       cursor += shape[i];
@@ -270,8 +285,10 @@
     var scheduled;
     var options;
     var body;
+    var level;
     var i;
     if (!cat || !MG.BOOK || stage < 1 || stage > TOTAL_STAGES) return null;
+    level = readingLevel(state);
     seed = runSeed(state);
     schedule = scheduleFor(cat, seed);
     scheduled = schedule[stage - 1];
@@ -281,7 +298,7 @@
     hated = scheduled.hated;
     contentSeed = stageSeed(seed, stage) ^
       Math.imul(scheduled.bookIndex + 1, 2246822519);
-    composed = composePassage(page, contentSeed);
+    composed = composePassage(page, contentSeed, level);
     templateIndex = pickIndex(3, contentSeed ^ 0x9e3779b9);
     options = scheduled.actions.map(function (action) {
       return option(action, action.id === loved.id);
@@ -289,10 +306,11 @@
     for (i = 0; i < options.length; i += 1) {
       if (!options[i]) return null;
     }
-    body = makeBody(composed.passage, loved, hated, templateIndex, contentSeed);
+    body = makeBody(composed.passage, loved, hated, templateIndex, contentSeed, level);
     return {
       stage: stage,
       totalStages: TOTAL_STAGES,
+      level: level,
       groupId: scheduled.groupId,
       bookIndex: scheduled.bookIndex,
       page: page.page,

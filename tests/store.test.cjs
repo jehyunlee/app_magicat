@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-for (const file of ['data/actions', 'data/cats', 'data/book', 'data/shop', 'data/family', 'logic', 'store']) require('../js/' + file + '.js');
+for (const file of ['data/actions', 'data/cats', 'data/book', 'data/shop', 'data/family', 'data/levels', 'data/book-advanced', 'logic', 'store']) require('../js/' + file + '.js');
 const { CATS, Logic, Store, FAMILY } = globalThis.MG;
 const memory = () => {
   const map = new Map();

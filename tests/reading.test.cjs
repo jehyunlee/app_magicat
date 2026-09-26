@@ -3,6 +3,9 @@ const assert = require('node:assert/strict');
 require('../js/data/actions.js');
 require('../js/data/cats.js');
 require('../js/data/book.js');
+require('../js/data/family.js');
+require('../js/data/levels.js');
+require('../js/data/book-advanced.js');
 require('../js/logic.js');
 const { ACTIONS, BOOK, CATS, Logic } = globalThis.MG;
 const words = text => text.match(/[A-Za-z]+(?:['’][A-Za-z]+)?/g) || [];
@@ -29,10 +32,10 @@ test('hard vocabulary is replaced in player-facing reading content', () => {
   assert.doesNotMatch(text, /\b(aroma|ceramic|silicone|preference|bristles|gobbling|sheltered|texture|sensory)\b/i);
 });
 
-test('assembled story paragraphs also keep their sentences short', () => {
+test('assembled story paragraphs also keep their sentences short for easy readers', () => {
   for (const cat of CATS) {
     for (let seed = 1; seed <= 8; seed++) {
-      const state = { ...Logic.initial(cat), seed: Math.imul(seed, 0x9e3779b9) >>> 0 };
+      const state = { ...Logic.initial(cat, 'dad'), seed: Math.imul(seed, 0x9e3779b9) >>> 0 };
       for (let stage = 1; stage <= 10; stage++) {
         const round = Logic.round({ ...state, stage });
         const text = round.bodyEn.join(' ');

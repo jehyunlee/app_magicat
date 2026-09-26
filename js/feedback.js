@@ -41,17 +41,27 @@
     var correct = round.options.find(function (option) { return option.id === round.correctId; });
     if (!selected || !correct || selected.id === correct.id) return null;
     var sentences = (round.bodyEn.join(' ').match(/[^.!?]+[.!?]/g) || []).map(function (text) { return text.trim(); });
-    var correctQuote = sentences.find(function (sentence) { return sentence === 'Your cat likes the ' + correct.hint + '.'; });
-    var ending = 'does not like the ' + selected.hint + '.';
-    var selectedQuote = sentences.find(function (sentence) { return sentence.endsWith(ending); });
+    var level = round.level || 'basic';
+    var bank = MG.LEVELS[level] || MG.LEVELS.basic;
+    // Every taste template embeds the hint verbatim; facts never mention a hint.
+    var isTemplate = function (sentence, templates, hint) {
+      return templates.some(function (template) { return template.replace('{h}', hint) === sentence; });
+    };
+    var correctQuote = sentences.find(function (sentence) { return isTemplate(sentence, bank.liked, correct.hint); });
+    var selectedQuote = sentences.find(function (sentence) { return isTemplate(sentence, bank.disliked, selected.hint); });
     if (!correctQuote || !selectedQuote) throw new Error('The explanation must cite this page’s actual text.');
+    var reasoning = {
+      basic: '“likes”는 좋아한다는 뜻이고, “does not like”는 좋아하지 않는다는 뜻이에요.',
+      inference: '이 책은 “좋아한다”고 직접 말하지 않고 고양이의 행동을 보여 줘요. 골골거리며 달려가거나 꼬리를 세우고 곁에 머무는 모습은 좋아한다는 뜻이고, 귀를 내리거나 돌아서거나 숨는 모습은 싫어한다는 뜻이에요. 행동에서 마음을 한 번 더 추리해야 해요.',
+      advanced: '이 글은 수능 영어처럼 긴 문장과 어려운 단어로 취향을 둘러 표현해요. “gravitates toward”, “eagerness”, “preference” 같은 표현은 좋아한다는 뜻이고, “no inclination”, “indifference”, “aversion”, “withdraw” 같은 표현은 싫어한다는 뜻이에요. 양보 절(although, despite, however)이 있으면 주절의 태도가 글쓴이의 진짜 뜻이에요.'
+    };
     return {
       correct: correct,
       selected: selected,
       correctQuote: correctQuote,
       selectedQuote: selectedQuote,
       explanationKo: '본문에서 이 고양이는 ' + object(label(correct)) + ' 좋아한다고 했어요. 그래서 정답 행동은 “' + correct.en + '”예요. ' +
-        '선택한 ' + object(label(selected)) + ' 좋아하지 않는다는 문장도 있어요. “likes”는 좋아한다는 뜻이고, “does not like”는 좋아하지 않는다는 뜻이에요. 다른 고양이가 아니라, 이 책에 나온 고양이의 취향을 보고 골라야 해요.'
+        '선택한 ' + object(label(selected)) + ' 좋아하지 않는다는 문장도 있어요. ' + reasoning[level] + ' 다른 고양이가 아니라, 이 책에 나온 고양이의 취향을 보고 골라야 해요.'
     };
   }
   MG.Feedback = { explain: explain };

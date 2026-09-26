@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-for (const file of ['data/actions', 'data/cats', 'data/book', 'data/shop', 'data/family', 'logic', 'feedback']) require('../js/' + file + '.js');
+for (const file of ['data/actions', 'data/cats', 'data/book', 'data/shop', 'data/family', 'data/levels', 'data/book-advanced', 'logic', 'feedback']) require('../js/' + file + '.js');
 const { CATS, ACTION_BY_ID, BOOK, SHOP, Logic, Feedback } = globalThis.MG;
 
 test('content contains English only without Korean translation properties', () => {
@@ -413,4 +413,56 @@ test('character is stored in the run state and rejected when unknown', () => {
   assert.equal(Logic.initial(CATS[0], 'suan').character, 'suan');
   assert.equal(Logic.initial(CATS[0], 'stranger').character, null);
   assert.equal(Logic.answer(Logic.initial(CATS[0], 'mom'), Logic.round(Logic.initial(CATS[0], 'mom')).correctId).character, 'mom');
+});
+
+test('reading level follows the player: direct, one-step inference, or CSAT-style advanced', () => {
+  const { BOOK_ADVANCED, LEVELS, FAMILY } = globalThis.MG;
+  assert.deepEqual(FAMILY.map(m => m.level), ['basic', 'basic', 'basic', 'basic', 'advanced', 'inference']);
+  assert.equal(Object.keys(BOOK_ADVANCED).length, BOOK.length);
+  for (const page of BOOK) {
+    const bank = BOOK_ADVANCED[page.group];
+    assert.ok(bank.intro.length >= 5 && bank.detail.length >= 8 && bank.tip.length >= 5, page.group);
+    const words = s => s.match(/[A-Za-z]+(?:[’'][A-Za-z]+)?/g) || [];
+    const advancedAvg = [...bank.intro, ...bank.detail, ...bank.tip].reduce((a, s) => a + words(s).length, 0) / (bank.intro.length + bank.detail.length + bank.tip.length);
+    const basicAvg = [...page.facts.intro, ...page.facts.detail, ...page.facts.tip].reduce((a, s) => a + words(s).length, 0) / (page.facts.intro.length + page.facts.detail.length + page.facts.tip.length);
+    assert.ok(advancedAvg >= 12 && advancedAvg > basicAvg * 1.5, page.group + ' advanced sentences must be far longer');
+  }
+  const seenTemplates = { inference: new Set(), advanced: new Set() };
+  for (const cat of CATS) {
+    for (let seed = 1; seed <= 4; seed++) {
+      for (const [who, level] of [['suan', 'basic'], ['yewon', 'inference'], ['hunho', 'advanced']]) {
+        const state = { ...Logic.initial(cat, who), seed: Math.imul(seed, 0x9e3779b9) >>> 0 };
+        for (let stage = 1; stage <= TOTAL; stage++) {
+          const round = Logic.round({ ...state, stage });
+          assert.equal(round.level, level);
+          const text = round.bodyEn.join(' ');
+          const liked = round.options.find(o => o.loved);
+          const sentences = text.match(/[^.!?]+[.!?]/g).map(s => s.trim());
+          assert.equal(sentences.length, 8);
+          for (const option of round.options) assert.ok(text.includes(option.hint), 'every choice has a clue');
+          if (level === 'basic') {
+            assert.ok(text.includes('Your cat likes the ' + liked.hint + '.'));
+          } else {
+            assert.equal(text.includes('Your cat likes the '), false, 'non-basic tiers never state the taste directly');
+            assert.equal(text.includes('does not like the '), false);
+            const likedTemplates = LEVELS[level].liked.map(tpl => tpl.replace('{h}', liked.hint));
+            assert.ok(likedTemplates.some(s => sentences.includes(s)), 'liked sentence uses a tier template');
+            seenTemplates[level].add(likedTemplates.findIndex(s => sentences.includes(s)));
+            for (const option of round.options.filter(o => !o.loved)) {
+              const dislikedTemplates = LEVELS[level].disliked.map(tpl => tpl.replace('{h}', option.hint));
+              assert.ok(dislikedTemplates.some(s => sentences.includes(s)), 'disliked sentence uses a tier template');
+            }
+            const facts = level === 'advanced' ? BOOK_ADVANCED[round.groupId] : BOOK[round.bookIndex].facts;
+            assert.ok(round.passage.every(f => [...facts.intro, ...facts.detail, ...facts.tip].includes(f)), 'facts come from the tier bank');
+          }
+          for (const option of round.options.filter(o => !o.loved)) {
+            const fb = Feedback.explain(round, option.id);
+            assert.ok(sentences.includes(fb.correctQuote) && sentences.includes(fb.selectedQuote));
+            assert.match(fb.explanationKo, level === 'basic' ? /likes/ : level === 'inference' ? /추리/ : /수능/);
+          }
+        }
+      }
+    }
+  }
+  assert.ok(seenTemplates.inference.size >= 4 && seenTemplates.advanced.size >= 4, 'liked templates vary between rounds');
 });

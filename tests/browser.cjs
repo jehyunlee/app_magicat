@@ -332,6 +332,19 @@ const path = require('node:path');
       const personality = await page.evaluate(index => MG.CATS[index].personality, index);
       assert.equal(await page.locator('.mg-eat--' + personality).count(), 1);
     }
+    // Reading tiers: Yewon reads behaviour clues, Hunho reads CSAT-style prose.
+    for (const [member, level, marker] of [[5, 'inference', /purrs|runs straight|will not leave|rubs its cheek|comes running|eyes light up/], [4, 'advanced', /gravitates toward|to the exclusion|enthusiasm it rarely|remarkably stable|unmistakable eagerness/]]) {
+      await page.goto(url);
+      await select(1, member);
+      assert.equal(await page.evaluate(() => MG.Logic.round(MG.Game.getState()).level), level);
+      const body = await page.locator('#page-body').innerText();
+      assert.equal(/Your cat likes the /.test(body), false, level + ' must not state the taste directly');
+      assert.match(body, marker);
+      const badge = await page.locator('.mg-family__level').nth(member).innerText().catch(() => '');
+      await answer(1, false);
+      assert.match(await page.locator('#react-explanation').innerText(), level === 'inference' ? /\ucd94\ub9ac/ : /\uc218\ub2a5/);
+      await page.screenshot({ path: '/tmp/magic-cat-' + level + '.png' });
+    }
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(url);
     await page.locator('#btn-start').click();
